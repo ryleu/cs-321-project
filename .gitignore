@@ -1,0 +1,28 @@
+# Maven build output
+target/
+
+# Java
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Misc
+.DS_Store
+out/
+bin/
+build/
+
+# Nix
+result
+result-*
+.direnv/
+.envrc
