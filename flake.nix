@@ -2,9 +2,12 @@
   description = "Critter Parade (LibGDX) - dev shell and runnable apps";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     systems.url = "github:nix-systems/default";
-    nixgl.url = "github:guibou/nixGL";
+    nixgl = {
+      url = "github:guibou/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, systems, nixgl }:
@@ -33,12 +36,14 @@
           libPath = pkgs.lib.makeLibraryPath runtimeLibs;
           jdk = pkgs.jdk21;
           mvn = pkgs.maven;
+          nb = pkgs.netbeans;
         in {
           default = pkgs.mkShell {
-            packages = [ mvn jdk ] ++ runtimeLibs;
+            packages = [ mvn jdk nb ] ++ runtimeLibs;
             shellHook = ''
               export JAVA_HOME=${jdk}
               export LD_LIBRARY_PATH=${libPath}:$LD_LIBRARY_PATH
+              export MAVEN_OPTS="-Djava.library.path=${libPath}"
             '';
           };
         }
