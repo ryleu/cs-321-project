@@ -10,7 +10,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <exec.mainClass>com.roachstudios.critterparade.CritterParade</exec.mainClass>
         <packageClassName>${exec.mainClass}</packageClassName>
-        <gdx.version>1.12.0</gdx.version>
+        <gdx.version>1.13.5</gdx.version>
     </properties>
     <dependencies>
         <dependency>
