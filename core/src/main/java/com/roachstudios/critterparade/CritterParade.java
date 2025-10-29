@@ -32,7 +32,7 @@ public class CritterParade extends Game {
         batch = new SpriteBatch();
         font = new BitmapFont();
         skin = new CritterParadeSkin();
-        viewport = new FitViewport(8,5);
+        viewport = new FitViewport(16,9);
 
         font.setUseIntegerPositions(false);
         font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
