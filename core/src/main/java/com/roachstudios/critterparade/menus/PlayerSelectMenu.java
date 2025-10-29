@@ -18,9 +18,11 @@ import java.util.function.Supplier;
 public class PlayerSelectMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
+    private final Supplier<Screen> nextScreen;
 
     public PlayerSelectMenu(CritterParade gameInstance, Supplier<Screen> nextScreen) {
         this.gameInstance = gameInstance;
+        this.nextScreen = nextScreen;
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -37,13 +39,15 @@ public class PlayerSelectMenu implements Screen {
 
         root.add(title).fillX();
 
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 2; i <= 6; i++) {
             root.row();
-            TextButton changeButton = new TextButton("%d Players".formatted(++i), gameInstance.skin);
+            TextButton changeButton = new TextButton("%d Players".formatted(i), gameInstance.skin);
+            int finalI = i;
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    //gameInstance.setScreen(miniGameSupplier.get());
+                    gameInstance.setNumPlayers(finalI);
+                    gameInstance.setScreen(nextScreen.get());
                 }
             });
             root.add(changeButton);

@@ -45,7 +45,7 @@ public class MiniGameSelectMenu implements Screen {
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(miniGameSupplier.get());
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, miniGameSupplier::get));
                 }
             });
             root.add(changeButton);
