@@ -22,6 +22,8 @@ public class CritterParade extends Game {
     public BitmapFont font;
     public Skin skin;
     public FitViewport viewport;
+    
+    private int numPlayers;
 
     private final ArrayList<Supplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<Supplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
@@ -70,5 +72,9 @@ public class CritterParade extends Game {
 
     public List<Supplier<GameBoard>> getGameBoards() {
         return Collections.unmodifiableList(gameBoardRegistry);
+    }
+    
+    public int getNumPlayers(){
+        return this.numPlayers;
     }
 }
