@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.gameboards.GameBoard;
 
@@ -23,7 +23,7 @@ public class BoardSelectMenu implements Screen {
     public BoardSelectMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -45,7 +45,7 @@ public class BoardSelectMenu implements Screen {
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(gameBoard.get());
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, gameBoard::get));
                 }
             });
             root.add(changeButton);
@@ -65,7 +65,7 @@ public class BoardSelectMenu implements Screen {
 
     @Override
     public void resize(int width, int height) {
-
+        stage.getViewport().update(width, height, true);
     }
 
     @Override

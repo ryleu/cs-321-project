@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 
@@ -25,5 +26,8 @@ public class CritterParadeSkin extends Skin {
         tfs.font = font;
         tfs.fontColor = Color.WHITE;
         add("default", tfs);
+
+        ScrollPane.ScrollPaneStyle sps = new ScrollPane.ScrollPaneStyle();
+        add("default", sps);
     }
 }

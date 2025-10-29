@@ -7,7 +7,7 @@ package com.roachstudios.critterparade.menus;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 
 /**
@@ -21,7 +21,7 @@ public class MiniGameResultScreen implements Screen{
     public MiniGameResultScreen(CritterParade gameInstance){
         this.gameInstance = gameInstance;
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -35,6 +35,7 @@ public class MiniGameResultScreen implements Screen{
 
     @Override
     public void resize(int i, int i1) {
+        stage.getViewport().update(i, i1, true);
     }
 
     @Override

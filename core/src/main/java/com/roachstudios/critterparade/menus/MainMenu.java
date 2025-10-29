@@ -11,7 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 
 public class MainMenu implements Screen {
@@ -23,7 +23,7 @@ public class MainMenu implements Screen {
         this.gameInstance = gameInstance;
         logoTexture = new Texture("logo.png");
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -59,6 +59,28 @@ public class MainMenu implements Screen {
         });
         root.add(miniGames).fill().align(Align.center);
 
+        root.row();
+
+        TextButton howToPlay = new TextButton("How To Play", gameInstance.skin);
+        howToPlay.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new HowToPlayMenu(gameInstance));
+            }
+        });
+        root.add(howToPlay).fill().align(Align.center);
+
+        root.row();
+
+        TextButton exit = new TextButton("Exit", gameInstance.skin);
+        exit.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Gdx.app.exit();
+            }
+        });
+        root.add(exit).fill().align(Align.center);
+
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
@@ -74,7 +96,7 @@ public class MainMenu implements Screen {
 
     @Override
     public void resize(int i, int i1) {
-
+        stage.getViewport().update(i, i1, true);
     }
 
     @Override
