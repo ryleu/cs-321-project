@@ -48,6 +48,17 @@ public class MainMenu implements Screen {
         });
         root.add(play).fillX().align(Align.center);
 
+        root.row();
+
+        TextButton miniGames = new TextButton("Mini Games", gameInstance.skin);
+        miniGames.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
+            }
+        });
+        root.add(miniGames).fill().align(Align.center);
+
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 

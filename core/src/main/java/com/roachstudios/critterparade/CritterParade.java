@@ -10,6 +10,7 @@ import com.roachstudios.critterparade.gameboards.GameBoard;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
+import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,7 @@ public class CritterParade extends Game {
     public BitmapFont font;
     public Skin skin;
     public FitViewport viewport;
-    
+
     private int numPlayers;
 
     private final ArrayList<Supplier<MiniGame>> minigameRegistry = new ArrayList<>();
@@ -41,6 +42,9 @@ public class CritterParade extends Game {
 
         // register game boards
         registerGameBoard(() -> new PicnicPondBoard(this));
+
+        // register mini games
+        registerMiniGame(() -> new SimpleRacerMiniGame(this));
 
         this.setScreen(new MainMenu(this));
     }
@@ -73,8 +77,12 @@ public class CritterParade extends Game {
     public List<Supplier<GameBoard>> getGameBoards() {
         return Collections.unmodifiableList(gameBoardRegistry);
     }
-    
+
     public int getNumPlayers(){
         return this.numPlayers;
+    }
+
+    public void setNumPlayers(int newNumPlayers) {
+        this.numPlayers = newNumPlayers;
     }
 }
