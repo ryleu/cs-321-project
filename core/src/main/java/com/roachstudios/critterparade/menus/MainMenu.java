@@ -17,9 +17,11 @@ import com.roachstudios.critterparade.CritterParade;
 public class MainMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
+    private final Texture logoTexture;
 
     public MainMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
+        logoTexture = new Texture("logo.png");
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -32,7 +34,7 @@ public class MainMenu implements Screen {
         root.setFillParent(true);
         stage.addActor(root);
 
-        Image logo = new Image(new Texture("logo.png"));
+        Image logo = new Image(logoTexture);
         root.add(logo).fill();
 
         root.row();
@@ -81,6 +83,6 @@ public class MainMenu implements Screen {
 
     @Override
     public void dispose() {
-
+        logoTexture.dispose();
     }
 }
