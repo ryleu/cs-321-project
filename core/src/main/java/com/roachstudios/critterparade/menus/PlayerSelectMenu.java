@@ -15,20 +15,32 @@ import com.roachstudios.critterparade.CritterParade;
 
 import java.util.function.Supplier;
 
+/**
+ * Screen for selecting the number of players before moving to the next screen
+ * (e.g., a board or a mini game).
+ */
 public class PlayerSelectMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
     private final Supplier<Screen> nextScreen;
 
+    /**
+     * @param gameInstance shared game instance used for navigation and skin
+     * @param nextScreen supplier for the next screen to show after selecting players
+     */
     public PlayerSelectMenu(CritterParade gameInstance, Supplier<Screen> nextScreen) {
         this.gameInstance = gameInstance;
         this.nextScreen = nextScreen;
 
+        // Fixed virtual size for consistent layout.
         stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Builds simple buttons for choosing a player count between 2 and 6.
+     */
     public void show() {
         Table root = new Table();
         stage.addActor(root);
@@ -57,8 +69,12 @@ public class PlayerSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float delta) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        // Clear each frame; scene2d does not clear automatically.
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();
@@ -66,6 +82,9 @@ public class PlayerSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Updates the viewport and centers the camera.
+     */
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }

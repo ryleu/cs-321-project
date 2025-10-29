@@ -11,18 +11,29 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.roachstudios.critterparade.CritterParade;
 
+/**
+ * A simple board implementation that displays a static background image.
+ */
 public class PicnicPondBoard extends GameBoard {
     private final CritterParade gameInstance;
     private final Stage stage;
 
+    /**
+     * @param gameInstance shared game instance used for navigation and skin
+     */
     public PicnicPondBoard(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
 
+        // ScreenViewport ensures the background is rendered pixel-perfect without
+        // additional scaling logic for this simple board.
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Builds a root table and sets a background texture.
+     */
     public void show() {
         Table root = new Table();
         stage.addActor(root);
@@ -35,14 +46,17 @@ public class PicnicPondBoard extends GameBoard {
             )
         );
 
-        root.add(new TextField("goob", gameInstance.skin));
+        root.add(new TextField("Under Construction", gameInstance.skin));
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float delta) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();

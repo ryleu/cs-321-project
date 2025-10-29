@@ -19,6 +19,10 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.roachstudios.critterparade.CritterParade;
 
+/**
+ * Shows basic controls with images for each critter. Uses a scrollable grid
+ * to accommodate different window sizes while keeping images at native scale.
+ */
 public class HowToPlayMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
@@ -29,9 +33,13 @@ public class HowToPlayMenu implements Screen {
     private final Texture mouseTexture;
     private final Texture squirrelTexture;
 
+    /**
+     * @param gameInstance shared game instance providing skin and navigation
+     */
     public HowToPlayMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
 
+        // Fixed virtual size for consistent layout.
         stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
 
@@ -44,6 +52,9 @@ public class HowToPlayMenu implements Screen {
     }
 
     @Override
+    /**
+     * Builds a scrollable grid of control images with labels.
+     */
     public void show() {
         Table root = new Table();
         root.setFillParent(true);
@@ -86,8 +97,11 @@ public class HowToPlayMenu implements Screen {
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float delta) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();
@@ -95,6 +109,9 @@ public class HowToPlayMenu implements Screen {
     }
 
     @Override
+    /**
+     * Updates the viewport and centers the camera.
+     */
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
@@ -132,7 +149,7 @@ public class HowToPlayMenu implements Screen {
         cell.row();
 
         Image image = new Image(new TextureRegionDrawable(new TextureRegion(texture)));
-        image.setScaling(Scaling.none); // render at native 128x128
+        image.setScaling(Scaling.none); // render at native 128x128 for sharpness
         cell.add(image).center();
 
         grid.add(cell).expand().fill().top();

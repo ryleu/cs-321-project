@@ -4,10 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-
-
-
-
+/**
+ * Represents a player profile and input source. Tracks basic board resources
+ * and exposes helper methods for reading input mapped by {@code playerID}.
+ *
+ * <p>Key mappings are intentionally hardcoded per ID to support same-keyboard
+ * local play without a configuration UI. The layout spaces players across
+ * the keyboard (WASD, TFGH, IJKL, bracket cluster, arrows, and numpad).</p>
+ */
 public class Player {
     
     private int fruit;
@@ -20,6 +24,10 @@ public class Player {
    
 
     
+    /**
+     * @param id unique player ID in [1..6] used for input mapping
+     * @param tex sprite texture representing the player
+     */
     public Player(int id, Texture tex){
         this.fruit = 0;
         this.crumbs = 0;
@@ -32,10 +40,16 @@ public class Player {
         
     }
     
+    /**
+     * Increments fruit count by one.
+     */
     public void addFruit(){
         this.fruit++;
     }
     
+    /**
+     * Decrements fruit count and clamps at zero.
+     */
     public void subFruit(){
         this.fruit--;
         
@@ -44,14 +58,23 @@ public class Player {
         }
     }
     
+    /**
+     * @return current fruit count
+     */
     public int getFruit(){
         return this.fruit;
     }
     
+    /**
+     * @param numToAdd number of crumbs to add
+     */
     public void addCrumbs(int numToAdd){
         this.crumbs += numToAdd;
     }
     
+    /**
+     * Subtracts crumbs and clamps at zero.
+     */
     public void subCrumbs(int numToSub){
         this.crumbs -= numToSub;
         
@@ -60,31 +83,52 @@ public class Player {
         }
     }
     
+    /**
+     * @return current crumb total
+     */
     public int getCrumbs(){
         return this.crumbs;
     }
     
+    /**
+     * Increments mini-game win counter.
+     */
     public void addWin(){
         this.numMGWins++;
     }
     
+    /**
+     * @return number of mini-game wins
+     */
     public int getWins(){
         return this.numMGWins;
     }
     
+    /**
+     * @return the player's ID used for input mapping
+     */
     public int getID(){
         return this.playerID;
     }
     
+    /**
+     * @return the player's sprite
+     */
     public Sprite getSprite(){
         return this.playerSprite;
     }
     
+    /**
+     * Sets sprite size uniformly in world units.
+     */
     public void setSpriteSize(float size){
         this.playerSprite.setSize(size, size);
         
     }
     
+    /**
+     * @return true while the mapped "Up" key is held for this player
+     */
     public boolean isPressingUp(){
         switch(this.playerID){
             case 1:
@@ -124,6 +168,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true on the frame the mapped "Up" key is pressed
+     */
     public boolean justPressedUp(){
         switch(this.playerID){
             case 1:
@@ -163,6 +210,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true while the mapped "Left" key is held for this player
+     */
     public boolean isPressingLeft(){
         switch(this.playerID){
             case 1:
@@ -202,6 +252,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true on the frame the mapped "Left" key is pressed
+     */
     public boolean justPressedLeft(){
         switch(this.playerID){
             case 1:
@@ -241,6 +294,9 @@ public class Player {
         return false;
     }
      
+    /**
+     * @return true while the mapped "Down" key is held for this player
+     */
     public boolean isPressingDown(){
         switch(this.playerID){
             case 1:
@@ -280,6 +336,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true on the frame the mapped "Down" key is pressed
+     */
     public boolean justPressedDown(){
         switch(this.playerID){
             case 1:
@@ -319,6 +378,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true while the mapped "Right" key is held for this player
+     */
     public boolean isPressingRight(){
         switch(this.playerID){
             case 1:
@@ -358,6 +420,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true on the frame the mapped "Right" key is pressed
+     */
     public boolean justPressedRight(){
         switch(this.playerID){
             case 1:
@@ -397,6 +462,9 @@ public class Player {
         return false;
     }
        
+    /**
+     * @return true while the mapped "Action" key is held for this player
+     */
     public boolean isPressingAction(){
         switch(this.playerID){
             case 1:
@@ -436,6 +504,9 @@ public class Player {
         return false;
     }
     
+    /**
+     * @return true on the frame the mapped "Action" key is pressed
+     */
     public boolean justPressedAction(){
         switch(this.playerID){
             case 1:

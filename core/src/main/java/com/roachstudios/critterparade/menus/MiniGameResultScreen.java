@@ -10,8 +10,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
-import com.badlogic.gdx.utils.viewport.FitViewport;
-
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
@@ -24,26 +22,33 @@ import com.roachstudios.critterparade.Player;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 
 /**
- *
- * @author Nathan
+ * Displays the placements resulting from a mini game and provides a
+ * context-sensitive Continue button based on the current game mode.
  */
 public class MiniGameResultScreen implements Screen{
     private final CritterParade gameInstance;
     private final Stage stage;
     private Player[] placements;
     
-
-    
-
+    /**
+     * @param gameInstance shared game instance used for navigation and skin
+     * @param results ordered array of players from 1st to last place
+     */
     public MiniGameResultScreen(CritterParade gameInstance, Player[] results){
          this.gameInstance = gameInstance;
          this.placements = results;
+        // Use ScreenViewport to present results at actual pixel size regardless
+        // of window dimensions; this keeps text crisp for simple static lists.
         stage = new Stage(new ScreenViewport());
 
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Builds a simple list of placements and adds a Continue button whose
+     * destination depends on the active game mode.
+     */
     public void show() {
         Table root = new Table();
         stage.addActor(root);
@@ -62,6 +67,7 @@ public class MiniGameResultScreen implements Screen{
             root.add(place);
         }
         
+        // Continue action depends on whether we are in the board flow or practice.
         if(gameInstance.mode == CritterParade.Mode.BOARD_MODE){
             root.row();
             TextButton changeButton = new TextButton("Continue", gameInstance.skin);
@@ -96,8 +102,11 @@ public class MiniGameResultScreen implements Screen{
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float f) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();
@@ -105,6 +114,9 @@ public class MiniGameResultScreen implements Screen{
     }
 
     @Override
+    /**
+     * Updates the viewport and centers the camera.
+     */
     public void resize(int i, int i1) {
         stage.getViewport().update(i, i1, true);
     }

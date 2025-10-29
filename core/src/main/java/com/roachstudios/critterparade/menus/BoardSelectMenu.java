@@ -16,18 +16,31 @@ import com.roachstudios.critterparade.gameboards.GameBoard;
 
 import java.util.function.Supplier;
 
+/**
+ * Presents a list of available boards and navigates to {@link PlayerSelectMenu}
+ * to select the player count for the chosen board.
+ */
 public class BoardSelectMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
 
+    /**
+     * Constructs the board selection screen.
+     *
+     * @param gameInstance shared game instance used for navigation and skin
+     */
     public BoardSelectMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
 
+        // Fixed virtual size for predictable layout across window sizes.
         stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Builds the simple list UI with a title and one button per board option.
+     */
     public void show() {
         Table root = new Table();
         stage.addActor(root);
@@ -55,8 +68,12 @@ public class BoardSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float delta) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        // Clear each frame; scene2d does not clear automatically.
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();
@@ -64,6 +81,9 @@ public class BoardSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Keeps the virtual size consistent and centers the camera on resize.
+     */
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }

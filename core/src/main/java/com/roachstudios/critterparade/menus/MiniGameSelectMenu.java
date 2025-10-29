@@ -16,19 +16,37 @@ import com.roachstudios.critterparade.minigames.MiniGame;
 
 import java.util.function.Supplier;
 
+/**
+ * Presents a list of available mini games and navigates to a {@link PlayerSelectMenu}
+ * for the chosen game. Uses scene2d UI with a {@link Stage} and {@link Table}-based
+ * layout for simplicity and consistency.
+ */
 public class MiniGameSelectMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
 
+    /**
+     * Constructs the mini-game selection screen.
+     *
+     * @param gameInstance shared game instance providing skin, mode, and navigation
+     */
     public MiniGameSelectMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
 
+        // Use a fixed virtual size so UI scales consistently across aspect ratios.
         stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Builds the UI tree the first time the screen is shown.
+     *
+     * <p>We create widgets here (rather than in the constructor) so the screen can
+     * be reinstantiated or revisited without holding onto stale UI state.</p>
+     */
     public void show() {
+        // Build the UI tree on-demand to keep the constructor lightweight.
         Table root = new Table();
         stage.addActor(root);
         root.setFillParent(true);
@@ -55,8 +73,14 @@ public class MiniGameSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Advances and draws the stage each frame.
+     *
+     * @param delta time in seconds since the last frame
+     */
     public void render(float delta) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        // Clear each frame; scene2d does not clear automatically.
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act();
@@ -64,7 +88,11 @@ public class MiniGameSelectMenu implements Screen {
     }
 
     @Override
+    /**
+     * Updates the viewport to maintain the virtual size and center the camera.
+     */
     public void resize(int width, int height) {
+        // Center the camera so the virtual area remains anchored after resize.
         stage.getViewport().update(width, height, true);
     }
 

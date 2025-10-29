@@ -14,20 +14,31 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 
+/**
+ * The main entry menu for the game. Presents navigation to Board mode,
+ * Mini games, How To Play, and Exit.
+ */
 public class MainMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
     private final Texture logoTexture;
 
+    /**
+     * @param gameInstance shared game instance used for navigation and skin
+     */
     public MainMenu(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
         logoTexture = new Texture("logo.png");
 
+        // Fixed virtual size for consistent layout.
         stage = new Stage(new FitViewport(640, 360));
         Gdx.input.setInputProcessor(stage);
     }
 
     @Override
+    /**
+     * Composes the menu UI using a columnar {@link Table} layout.
+     */
     public void show() {
         // the main element of the menu, everything else is a child of this
         Table root = new Table();
@@ -87,8 +98,11 @@ public class MainMenu implements Screen {
     }
 
     @Override
+    /**
+     * Clears the screen and renders the stage.
+     */
     public void render(float v) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1);
+        Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         // make the things on the stage act and render
@@ -97,6 +111,9 @@ public class MainMenu implements Screen {
     }
 
     @Override
+    /**
+     * Updates the viewport and centers the camera.
+     */
     public void resize(int i, int i1) {
         stage.getViewport().update(i, i1, true);
     }

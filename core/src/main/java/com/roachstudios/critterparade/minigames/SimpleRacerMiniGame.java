@@ -4,22 +4,17 @@
  */
 package com.roachstudios.critterparade.minigames;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
 import com.roachstudios.critterparade.menus.MiniGameResultScreen;
 
 /**
- *
- * @author Nathan
+ * A simple reaction-based horizontal racer: each player advances by pressing
+ * their move input. First to cross the finish line wins.
  */
 public class SimpleRacerMiniGame extends MiniGame{
     
@@ -57,6 +52,9 @@ public class SimpleRacerMiniGame extends MiniGame{
     public Player[] placement;
     private int finishedCount;
     
+    /**
+     * @param GameInstance shared game instance providing viewport, batch, and nav
+     */
     public SimpleRacerMiniGame(CritterParade GameInstance){
         
         this.gameInstance = GameInstance;
@@ -101,17 +99,27 @@ public class SimpleRacerMiniGame extends MiniGame{
     }
 
     @Override
+    /**
+     * Initializes transient state if needed when the mini game is shown.
+     */
     public void show() {
         
     }
 
     @Override
+    /**
+     * Frame loop: process input, update game state, then draw.
+     */
     public void render(float f) {
         input();
         logic();
-        draw();    }
+        draw();
+    }
 
     @Override
+    /**
+     * Keep a single shared viewport so mini games render consistently.
+     */
     public void resize(int i, int i1) {
         gameInstance.viewport.update(i, i1, true);
     }
@@ -132,6 +140,9 @@ public class SimpleRacerMiniGame extends MiniGame{
     @Override
     public void dispose() {
     }
+    /**
+     * Reads player inputs and translates them into movement when allowed.
+     */
     private void input(){
         
         float speed = 16f;
@@ -156,6 +167,10 @@ public class SimpleRacerMiniGame extends MiniGame{
  
     }
     
+    /**
+     * Clamps sprites to the world bounds and records finish order once a
+     * player crosses the line at x=14 in world units.
+     */
     private void logic(){
         float worldWidth = gameInstance.viewport.getWorldWidth();
         float worldHeight = gameInstance.viewport.getWorldHeight();
@@ -226,7 +241,7 @@ public class SimpleRacerMiniGame extends MiniGame{
     }
     
     private void draw(){
-        ScreenUtils.clear(Color.BLACK);
+        ScreenUtils.clear(1f, 0.992f, 0.816f, 1f);
         gameInstance.viewport.apply();
         gameInstance.batch.setProjectionMatrix(gameInstance.viewport.getCamera().combined);
         gameInstance.batch.begin();
@@ -235,6 +250,7 @@ public class SimpleRacerMiniGame extends MiniGame{
         float worldHeight = gameInstance.viewport.getWorldHeight();
         
         gameInstance.batch.draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        // Finish line at x=14 to leave 2 world units of run-up in a 16x9 world.
         gameInstance.batch.draw(finishLineTex, 14f, 0, 1, worldHeight);
         
         if(playerCount >= 2){
