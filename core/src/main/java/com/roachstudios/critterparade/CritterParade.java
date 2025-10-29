@@ -25,6 +25,12 @@ public class CritterParade extends Game {
     public FitViewport viewport;
 
     private int numPlayers = 6;
+    
+    public enum Mode{
+        BOARD_MODE, PRACTICE_MODE;
+    }
+    
+    public Mode mode;
 
     private final ArrayList<Supplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<Supplier<GameBoard>> gameBoardRegistry = new ArrayList<>();

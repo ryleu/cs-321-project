@@ -43,6 +43,7 @@ public class MainMenu implements Screen {
         play.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.mode = CritterParade.Mode.BOARD_MODE;
                 gameInstance.setScreen(new BoardSelectMenu(gameInstance));
             }
         });
@@ -54,6 +55,7 @@ public class MainMenu implements Screen {
         miniGames.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.mode = CritterParade.Mode.PRACTICE_MODE;
                 gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
             }
         });

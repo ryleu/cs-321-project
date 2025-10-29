@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
+import com.roachstudios.critterparade.menus.MiniGameResultScreen;
 
 /**
  *
@@ -311,10 +312,27 @@ public class SimpleRacerMiniGame extends MiniGame{
         }
     }
     
-    private boolean areAllFinished(){
+    private void areAllFinished(){
         
+        String out = "Placements:\n";
+        for(int i = 0; i < placement.length ; i++)
+        {
+            
+            if(placement[i] != null)
+            {
+                 out += (i + 1) + ". " + placement[i].getID() + "\n";
+            }
+            else
+            {
+                out += (i + 1) + ". NULL\n";
+            }
+            
+            System.out.println(out);
+        }
         
-        return playerCount == finishedCount;
+        if(playerCount == finishedCount){
+        gameInstance.setScreen(new MiniGameResultScreen(gameInstance, placement));
+        }
     }
     
 }
