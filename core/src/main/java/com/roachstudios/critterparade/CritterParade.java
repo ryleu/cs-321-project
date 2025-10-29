@@ -24,7 +24,7 @@ public class CritterParade extends Game {
     public Skin skin;
     public FitViewport viewport;
 
-    private int numPlayers;
+    private int numPlayers = 6;
 
     private final ArrayList<Supplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<Supplier<GameBoard>> gameBoardRegistry = new ArrayList<>();

@@ -62,9 +62,11 @@ public class SimpleRacerMiniGame extends MiniGame{
                 
         playerSize = 1.0f;
         playerCount = gameInstance.getNumPlayers();
+        placement = new Player[playerCount];
+        finishedCount = 0;
         
-        backgroundTex = new Texture("MiniGame/SimpleRacerMiniGame/Clouds.png");
-        finishLineTex = new Texture("MiniGame/SimpleRacerMiniGame/FinishLine.png");
+        backgroundTex = new Texture("MiniGames/SimpleRacer/Clouds.png");
+        finishLineTex = new Texture("MiniGames/SimpleRacer/FinishLine.png");
         
         player1Tex = new Texture("PlayerSprites/bumble_bee.png");
         player1 = new Player(1, player1Tex);
@@ -99,7 +101,7 @@ public class SimpleRacerMiniGame extends MiniGame{
 
     @Override
     public void show() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        
     }
 
     @Override
@@ -115,22 +117,19 @@ public class SimpleRacerMiniGame extends MiniGame{
 
     @Override
     public void pause() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        
     }
 
     @Override
     public void resume() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
     public void hide() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
     public void dispose() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     private void input(){
         
@@ -313,17 +312,7 @@ public class SimpleRacerMiniGame extends MiniGame{
     }
     
     private boolean areAllFinished(){
-        System.out.println("finishedCount: " + finishedCount);
-        for (int i = 0; i < placement.length; i++) {
-            String out = (i + 1) + ". Player ";
-            if(placement[i] != null){
-                out += placement[i].getID();
-            }
-            else{
-                out += "NULL";
-            }
-            System.out.println(out);
-        }
+        
         
         return playerCount == finishedCount;
     }
