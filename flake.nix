@@ -1,103 +1,63 @@
 {
-  description = "Critter Parade (LibGDX) - dev shell and runnable apps";
-
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     systems.url = "github:nix-systems/default";
-    nixgl = {
-      url = "github:guibou/nixGL";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, systems, nixgl }:
-    let
-      forAllSystems = nixpkgs.lib.genAttrs (import systems);
-    in
-    {
-      devShells = forAllSystems (system:
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = import inputs.systems;
+      perSystem =
+        {
+          config,
+          self',
+          pkgs,
+          lib,
+          system,
+          ...
+        }:
         let
-          pkgs = import nixpkgs { inherit system; };
-          runtimeLibs = with pkgs; [
+          libs = with pkgs; [
+            # GL
+            libGL
+            glfw
+            glfw-wayland-minecraft
+            mesa
             xorg.libX11
-            xorg.libXext
             xorg.libXrandr
-            xorg.libXinerama
             xorg.libXcursor
-            xorg.libXxf86vm
             xorg.libXi
-            libglvnd
-            wayland
-            libxkbcommon
-            alsa-lib
-            fontconfig
-            freetype
-          ];
-          libPath = pkgs.lib.makeLibraryPath runtimeLibs;
-          jdk = pkgs.jdk21;
-          mvn = pkgs.maven;
-          nb = pkgs.netbeans;
-        in {
-          default = pkgs.mkShell {
-            packages = [ mvn jdk nb ] ++ runtimeLibs;
-            shellHook = ''
-              export JAVA_HOME=${jdk}
-              export LD_LIBRARY_PATH=${libPath}:$LD_LIBRARY_PATH
-              export MAVEN_OPTS="-Djava.library.path=${libPath}"
-            '';
-          };
-        }
-      );
+            xorg.libXinerama
+            xorg.libXxf86vm
+            xorg.libxcb
+            glfw-wayland
 
-      apps = forAllSystems (system:
-        let
-          pkgs = import nixpkgs { inherit system; };
-          runtimeLibs = with pkgs; [
-            xorg.libX11
-            xorg.libXext
-            xorg.libXrandr
-            xorg.libXinerama
-            xorg.libXcursor
-            xorg.libXxf86vm
-            xorg.libXi
-            libglvnd
-            wayland
-            libxkbcommon
-            alsa-lib
-            fontconfig
-            freetype
+            # audio
+            libpulseaudio
+            openal
+
+            flite
+
+            jetbrains.jdk
+
+            jetbrains.idea-community-bin
           ];
-          libPath = pkgs.lib.makeLibraryPath runtimeLibs;
-          jdk = pkgs.jdk21;
-          mvn = pkgs.maven;
-          runScript = pkgs.writeShellScriptBin "critter-parade-run" ''
-            export JAVA_HOME=${jdk}
-            export LD_LIBRARY_PATH=${libPath}:$LD_LIBRARY_PATH
-            export MAVEN_OPTS="-Djava.library.path=${libPath}"
-            exec ${mvn}/bin/mvn -q -f "$PWD/pom.xml" exec:java
-          '';
-          runScriptNixGL = pkgs.writeShellScriptBin "critter-parade-run-nixgl" ''
-            export JAVA_HOME=${jdk}
-            export LD_LIBRARY_PATH=${libPath}:$LD_LIBRARY_PATH
-            export MAVEN_OPTS="-Djava.library.path=${libPath}"
-            exec ${nixgl.packages.${system}.nixGLDefault}/bin/nixGL ${mvn}/bin/mvn -q -f "$PWD/pom.xml" exec:java
-          '';
-        in {
-          default = {
-            type = "app";
-            program = "${runScript}/bin/critter-parade-run";
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              jetbrains.jdk
+            ];
+
+            buildInputs = libs;
+            LD_LIBRARY_PATH = lib.makeLibraryPath libs;
+
+            env = {
+              JAVA_HOME = "${pkgs.jetbrains.jdk}/lib/openjdk/";
+            };
           };
-          run = {
-            type = "app";
-            program = "${runScript}/bin/critter-parade-run";
-          };
-          run-nixgl = {
-            type = "app";
-            program = "${runScriptNixGL}/bin/critter-parade-run-nixgl";
-          };
-        }
-      );
+        };
     };
 }
-
-

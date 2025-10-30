@@ -1,3 +1,5 @@
+.direnv/
+
 ## Gradle:
 .gradle/
 gradle-app.setting
