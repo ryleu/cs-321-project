@@ -2,6 +2,7 @@ package com.roachstudios.critterparade;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -45,6 +46,12 @@ public class CritterParade extends Game {
     private final ArrayList<Supplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
 
     private boolean debugMode = true;
+
+    // Callback invoked by result screens when a mini game finishes in board mode
+    public Runnable onMiniGameCompleteCallback = null;
+
+    // Persistent players shared across boards and mini games
+    private final ArrayList<Player> players = new ArrayList<>();
 
     /**
      * Initializes shared resources and registers boards/mini games.
@@ -133,5 +140,54 @@ public class CritterParade extends Game {
      */
     public void setNumPlayers(int newNumPlayers) {
         this.numPlayers = newNumPlayers;
+    }
+
+    /**
+     * Initializes persistent players with default textures and sprite sizes.
+     * Safe to call multiple times; will reinitialize to the current player count.
+     */
+    public void initPlayers() {
+        players.clear();
+        for (int id = 1; id <= numPlayers; id++) {
+            String path = switch (id) {
+                case 1 -> "PlayerSprites/bumble_bee.png";
+                case 2 -> "PlayerSprites/lady_bug.png";
+                case 3 -> "PlayerSprites/pond_frog.png";
+                case 4 -> "PlayerSprites/red_squirrel.png";
+                case 5 -> "PlayerSprites/field_mouse.png";
+                case 6 -> "PlayerSprites/solider_ant.png";
+                default -> "PlayerSprites/bumble_bee.png";
+            };
+            com.badlogic.gdx.graphics.Texture tex = new com.badlogic.gdx.graphics.Texture(path);
+            Player p = new Player(id, tex);
+            p.setSpriteSize(1.0f);
+            players.add(p);
+        }
+    }
+
+    /**
+     * @return immutable view of persistent players
+     */
+    public List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
+
+    /**
+     * Starts a random registered mini game and configures the flow to return
+     * to the provided screen once the mini game results are acknowledged.
+     */
+    public void startRandomMiniGameReturningTo(Screen returnToScreen) {
+        // ensure board mode so results route correctly
+        this.mode = Mode.BOARD_MODE;
+        // configure callback for MiniGameResultScreen
+        this.onMiniGameCompleteCallback = () -> setScreen(returnToScreen);
+
+        // pick any registered mini game (simple uniform random for now)
+        if (minigameRegistry.isEmpty()) {
+            return; // nothing to start
+        }
+        int idx = (int) (Math.random() * minigameRegistry.size());
+        MiniGame mg = minigameRegistry.get(idx).get();
+        setScreen(mg);
     }
 }

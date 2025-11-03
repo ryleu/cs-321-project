@@ -59,6 +59,7 @@ public class PlayerSelectMenu implements Screen {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     gameInstance.setNumPlayers(finalI);
+                    gameInstance.initPlayers();
                     gameInstance.setScreen(nextScreen.get());
                 }
             });
