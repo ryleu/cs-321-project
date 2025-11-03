@@ -102,6 +102,14 @@ public abstract class GameBoard implements Screen {
     }
 
     /**
+     * Hook invoked after a mini game completes and control returns to this board.
+     * Subclasses can advance turn order or resume state as needed.
+     */
+    public void onMiniGameComplete() {
+        // default: no-op
+    }
+
+    /**
      * Basic clear pass. Subclasses are expected to override and call super.
      */
     public void render(float delta) {

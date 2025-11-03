@@ -6,6 +6,7 @@ package com.roachstudios.critterparade.minigames;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.roachstudios.critterparade.CritterParade;
@@ -28,9 +29,11 @@ public class SimpleRacerMiniGame extends MiniGame{
     private final int playerCount;
     private final List<Player> racers = new ArrayList<>();
     private boolean[] finished;
+    private final List<Sprite> racerSprites = new ArrayList<>();
     
     public Player[] placement;
     private int finishedCount;
+    private boolean resultsShown;
     
     /**
      * @param GameInstance shared game instance providing viewport, batch, and nav
@@ -43,17 +46,20 @@ public class SimpleRacerMiniGame extends MiniGame{
         playerCount = gameInstance.getNumPlayers();
         placement = new Player[playerCount];
         finishedCount = 0;
+        resultsShown = false;
         finished = new boolean[playerCount];
         
         backgroundTex = new Texture("MiniGames/SimpleRacer/Clouds.png");
         finishLineTex = new Texture("MiniGames/SimpleRacer/FinishLine.png");
 
-        // Use persistent players so crumbs/fruits persist; size to playerCount
+        // Use persistent players so crumbs/fruits persist; keep rendering state local
         for (int i = 0; i < playerCount; i++) {
             Player p = gameInstance.getPlayers().get(i);
-            p.setSpriteSize(playerSize);
             racers.add(p);
             finished[i] = false;
+            Sprite s = new Sprite(p.getSprite().getTexture());
+            s.setSize(playerSize, playerSize);
+            racerSprites.add(s);
         }
     }
 
@@ -109,7 +115,7 @@ public class SimpleRacerMiniGame extends MiniGame{
             if (!finished[i]) {
                 Player p = racers.get(i);
                 if (p.justPressedRight()) {
-                    p.getSprite().translateX(speed * delta);
+                    racerSprites.get(i).translateX(speed * delta);
                 }
             }
         }
@@ -122,13 +128,14 @@ public class SimpleRacerMiniGame extends MiniGame{
     private void logic(){
         float worldWidth = gameInstance.viewport.getWorldWidth();
         
-        float playerWidth = racers.get(0).getSprite().getWidth();
-        float playerHeight = racers.get(0).getSprite().getHeight();
+        float playerWidth = racerSprites.get(0).getWidth();
+        float playerHeight = racerSprites.get(0).getHeight();
         for (int i = 0; i < racers.size(); i++) {
             Player p = racers.get(i);
-            p.getSprite().setX(MathUtils.clamp(p.getSprite().getX(), 0, worldWidth - playerWidth));
-            p.getSprite().setY(0 + (playerHeight * (p.getID() - 1)));
-            if (p.getSprite().getX() >= 14 && !finished[i]) {
+            Sprite s = racerSprites.get(i);
+            s.setX(MathUtils.clamp(s.getX(), 0, worldWidth - playerWidth));
+            s.setY(0 + (playerHeight * (p.getID() - 1)));
+            if (s.getX() >= 14 && !finished[i]) {
                 finished[i] = true;
                 placement[finishedCount] = p;
                 finishedCount++;
@@ -151,8 +158,8 @@ public class SimpleRacerMiniGame extends MiniGame{
         // Finish line at x=14 to leave 2 world units of run-up in a 16x9 world.
         gameInstance.batch.draw(finishLineTex, 14f, 0, 1, worldHeight);
         
-        for (int i = 0; i < racers.size(); i++) {
-            racers.get(i).getSprite().draw(gameInstance.batch);
+        for (int i = 0; i < racerSprites.size(); i++) {
+            racerSprites.get(i).draw(gameInstance.batch);
         }
         
         
@@ -179,7 +186,8 @@ public class SimpleRacerMiniGame extends MiniGame{
             System.out.println(out);
         }
         
-        if(playerCount == finishedCount){
+        if(playerCount == finishedCount && !resultsShown){
+            resultsShown = true;
             awardCrumbsByPlacement();
             gameInstance.setScreen(new MiniGameResultScreen(gameInstance, placement));
         }

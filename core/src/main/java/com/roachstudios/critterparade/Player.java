@@ -21,6 +21,7 @@ public class Player {
     private int playerID;
     private Texture playerTex;
     private Sprite playerSprite;
+    private int currentTileId;
    
 
     
@@ -37,6 +38,7 @@ public class Player {
         this.playerTex = tex;
         this.playerSprite = new Sprite(playerTex);
         this.playerSprite.setSize(1, 1);
+        this.currentTileId = -1;
         
     }
     
@@ -124,6 +126,20 @@ public class Player {
     public void setSpriteSize(float size){
         this.playerSprite.setSize(size, size);
         
+    }
+
+    /**
+     * @return the tile id the player is currently on (board graph id)
+     */
+    public int getCurrentTileId(){
+        return this.currentTileId;
+    }
+
+    /**
+     * Sets the tile id the player is currently on.
+     */
+    public void setCurrentTileId(int tileId){
+        this.currentTileId = tileId;
     }
     
     /**

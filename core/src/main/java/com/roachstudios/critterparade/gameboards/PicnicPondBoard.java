@@ -3,6 +3,8 @@ package com.roachstudios.critterparade.gameboards;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -26,9 +28,13 @@ public class PicnicPondBoard extends GameBoard {
     private boolean awaitingChoice = false;
     private List<Integer> currentOptions;
     private int selectedOptionIndex = 0;
+    private boolean requestAdvanceTurn = false;
 
     private boolean initialized = false;
     private final ArrayList<com.badlogic.gdx.scenes.scene2d.ui.Image> playerImages = new ArrayList<>();
+
+    private final float TILE_RADIUS = 10f;
+    private ShapeRenderer shapeRenderer;
 
     /**
      * @param gameInstance shared game instance used for navigation and skin
@@ -37,6 +43,7 @@ public class PicnicPondBoard extends GameBoard {
         super(gameInstance);
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -73,12 +80,11 @@ public class PicnicPondBoard extends GameBoard {
             // Load tiles from JSON
             loadTilesFromJson("board/PicnicPond/tiles.json");
 
-            // Initialize per-player states and images
-            playerStates.clear();
+            // Initialize players and images
             playerImages.clear();
             for (int p = 1; p <= gameInstance.getNumPlayers(); p++) {
-                playerStates.add(new PlayerState(p, startTileId));
                 Player pl = gameInstance.getPlayers().get(p - 1);
+                pl.setCurrentTileId(startTileId);
                 com.badlogic.gdx.scenes.scene2d.ui.Image img = new com.badlogic.gdx.scenes.scene2d.ui.Image(new TextureRegionDrawable(new TextureRegion(pl.getSprite().getTexture())));
                 img.setSize(24, 24);
                 stage.addActor(img);
@@ -97,13 +103,13 @@ public class PicnicPondBoard extends GameBoard {
     private void beginTurn() {
         awaitingChoice = false;
         selectedOptionIndex = 0;
-        PlayerState ps = playerStates.get(currentPlayerTurnIndex);
-        List<Integer> next = getNextTiles(ps.currentTileId);
+        Player current = gameInstance.getPlayers().get(currentPlayerTurnIndex);
+        List<Integer> next = getNextTiles(current.getCurrentTileId());
         currentOptions = next;
 
         if (next.isEmpty()) {
-            infoLabel.setText("Player " + ps.playerId + ": no moves. Skipping...");
-            advanceTurn();
+            infoLabel.setText("Player " + current.getID() + ": no moves. Skipping...");
+            requestAdvanceTurn = true;
             return;
         }
         if (next.size() == 1) {
@@ -113,18 +119,18 @@ public class PicnicPondBoard extends GameBoard {
         }
         // Multiple options: await player choice
         awaitingChoice = true;
-        infoLabel.setText("Player " + ps.playerId + ": choose a path (Left/Right, Action to confirm)");
+        infoLabel.setText("Player " + current.getID() + ": choose a path (Left/Right, Action to confirm)");
     }
 
     private void moveCurrentPlayerTo(int tileId) {
-        PlayerState ps = playerStates.get(currentPlayerTurnIndex);
-        ps.currentTileId = tileId;
+        Player current = gameInstance.getPlayers().get(currentPlayerTurnIndex);
+        current.setCurrentTileId(tileId);
         BoardTile tile = findTileById(tileId);
         if (tile != null && tile.getType() == BoardTile.Type.MINIGAME) {
-            infoLabel.setText("Player " + ps.playerId + " landed on RED. Starting minigame...");
+            infoLabel.setText("Player " + current.getID() + " landed on RED. Starting minigame...");
             startRandomMiniGame();
         } else {
-            advanceTurn();
+            requestAdvanceTurn = true;
         }
     }
 
@@ -136,8 +142,26 @@ public class PicnicPondBoard extends GameBoard {
     }
 
     private void advanceTurn() {
-        currentPlayerTurnIndex = (currentPlayerTurnIndex + 1) % playerStates.size();
-        beginTurn();
+        // Find the next player who has at least one available move.
+        int tries = gameInstance.getPlayers().size();
+        while (tries-- > 0) {
+            currentPlayerTurnIndex = (currentPlayerTurnIndex + 1) % gameInstance.getPlayers().size();
+            Player p = gameInstance.getPlayers().get(currentPlayerTurnIndex);
+            List<Integer> next = getNextTiles(p.getCurrentTileId());
+            if (!next.isEmpty()) {
+                beginTurn();
+                return;
+            }
+        }
+        // No players have moves; pause turn progression for this round.
+        awaitingChoice = false;
+        infoLabel.setText("No players have available moves.");
+    }
+
+    @Override
+    public void onMiniGameComplete() {
+        // After a mini game, proceed to the next player's turn
+        requestAdvanceTurn = true;
     }
 
     @Override
@@ -148,7 +172,10 @@ public class PicnicPondBoard extends GameBoard {
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (awaitingChoice) {
+        if (requestAdvanceTurn) {
+            requestAdvanceTurn = false;
+            advanceTurn();
+        } else if (awaitingChoice) {
             handleChoiceInput();
         }
 
@@ -157,20 +184,33 @@ public class PicnicPondBoard extends GameBoard {
 
         stage.act();
         stage.draw();
+
+        // Debug draw tiles as colored circles when debug mode is enabled
+        if (gameInstance.isDebugMode()) {
+            shapeRenderer.setProjectionMatrix(stage.getViewport().getCamera().combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            for (BoardTile t : tiles) {
+                Color c = getColorForType(t.getType());
+                shapeRenderer.setColor(c.r, c.g, c.b, 0.7f);
+                float cx = t.getPosX();
+                float cy = t.getPosY();
+                shapeRenderer.circle(cx, cy, TILE_RADIUS, 24);
+            }
+            shapeRenderer.end();
+        }
     }
 
     private void updateTurnLabel() {
-        PlayerState ps = playerStates.get(currentPlayerTurnIndex);
-        Player pl = gameInstance.getPlayers().get(ps.playerId - 1);
+        Player pl = gameInstance.getPlayers().get(currentPlayerTurnIndex);
         if (turnLabel != null) {
-            turnLabel.setText("Player " + ps.playerId + "  Crumbs: " + pl.getCrumbs() + "  Fruits: " + pl.getFruit());
+            turnLabel.setText("Player " + pl.getID() + "  Crumbs: " + pl.getCrumbs() + "  Fruits: " + pl.getFruit());
         }
     }
 
     private void updatePlayerImagePositions() {
-        for (int i = 0; i < playerStates.size(); i++) {
-            PlayerState ps = playerStates.get(i);
-            BoardTile t = findTileById(ps.currentTileId);
+        for (int i = 0; i < gameInstance.getPlayers().size(); i++) {
+            Player pl = gameInstance.getPlayers().get(i);
+            BoardTile t = findTileById(pl.getCurrentTileId());
             if (t == null) continue;
             com.badlogic.gdx.scenes.scene2d.ui.Image img = playerImages.get(i);
             float baseX = t.getPosX();
@@ -181,16 +221,29 @@ public class PicnicPondBoard extends GameBoard {
         }
     }
 
+    private Color getColorForType(BoardTile.Type type) {
+        switch (type) {
+            case REGULAR:
+                return Color.SKY; // blue
+            case SHOP:
+                return Color.GREEN; // green
+            case MINIGAME:
+                return Color.RED; // red
+            default:
+                return Color.WHITE;
+        }
+    }
+
     private void handleChoiceInput() {
-        PlayerState ps = playerStates.get(currentPlayerTurnIndex);
+        Player ps = gameInstance.getPlayers().get(currentPlayerTurnIndex);
         // Cycle selection with player-specific left/right, confirm with action
-        if (playerJustPressedLeft(ps.playerId)) {
+        if (playerJustPressedLeft(ps.getID())) {
             selectedOptionIndex = (selectedOptionIndex - 1 + currentOptions.size()) % currentOptions.size();
-            infoLabel.setText("Player " + ps.playerId + ": option " + (selectedOptionIndex + 1) + "/" + currentOptions.size());
-        } else if (playerJustPressedRight(ps.playerId)) {
+            infoLabel.setText("Player " + ps.getID() + ": option " + (selectedOptionIndex + 1) + "/" + currentOptions.size());
+        } else if (playerJustPressedRight(ps.getID())) {
             selectedOptionIndex = (selectedOptionIndex + 1) % currentOptions.size();
-            infoLabel.setText("Player " + ps.playerId + ": option " + (selectedOptionIndex + 1) + "/" + currentOptions.size());
-        } else if (playerJustPressedAction(ps.playerId)) {
+            infoLabel.setText("Player " + ps.getID() + ": option " + (selectedOptionIndex + 1) + "/" + currentOptions.size());
+        } else if (playerJustPressedAction(ps.getID())) {
             awaitingChoice = false;
             moveCurrentPlayerTo(currentOptions.get(selectedOptionIndex));
         }
@@ -255,6 +308,8 @@ public class PicnicPondBoard extends GameBoard {
 
     @Override
     public void dispose() {
-
+        if (shapeRenderer != null) {
+            shapeRenderer.dispose();
+        }
     }
 }

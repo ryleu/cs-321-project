@@ -180,7 +180,12 @@ public class CritterParade extends Game {
         // ensure board mode so results route correctly
         this.mode = Mode.BOARD_MODE;
         // configure callback for MiniGameResultScreen
-        this.onMiniGameCompleteCallback = () -> setScreen(returnToScreen);
+        this.onMiniGameCompleteCallback = () -> {
+            setScreen(returnToScreen);
+            if (returnToScreen instanceof com.roachstudios.critterparade.gameboards.GameBoard gb) {
+                gb.onMiniGameComplete();
+            }
+        };
 
         // pick any registered mini game (simple uniform random for now)
         if (minigameRegistry.isEmpty()) {

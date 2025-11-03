@@ -1,11 +1,11 @@
 {
   "start": 0,
   "tiles": [
-    { "id": 0, "x": 0, "y": 0, "type": "REGULAR", "next": [1, 2] },
-    { "id": 1, "x": 1, "y": 0, "type": "REGULAR", "next": [3] },
-    { "id": 2, "x": 0, "y": 1, "type": "REGULAR", "next": [3] },
-    { "id": 3, "x": 2, "y": 0, "type": "MINIGAME", "next": [4] },
-    { "id": 4, "x": 3, "y": 0, "type": "REGULAR", "next": [] }
+    { "id": 0, "x": 100, "y": 100, "type": "REGULAR", "next": [1, 2] },
+    { "id": 1, "x": 100, "y": 200, "type": "REGULAR", "next": [3] },
+    { "id": 2, "x": 100, "y": 300, "type": "REGULAR", "next": [3] },
+    { "id": 3, "x": 200, "y": 100, "type": "MINIGAME", "next": [4] },
+    { "id": 4, "x": 300, "y": 100, "type": "REGULAR", "next": [0] }
   ]
 }
 
