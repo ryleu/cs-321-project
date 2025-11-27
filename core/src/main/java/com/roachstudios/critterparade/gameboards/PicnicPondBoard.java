@@ -8,7 +8,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.roachstudios.critterparade.CritterParade;
+import com.roachstudios.critterparade.NamedSupplier;
 import com.roachstudios.critterparade.Player;
+import com.roachstudios.critterparade.menus.MiniGameInstructionScreen;
 import com.roachstudios.critterparade.minigames.MiniGame;
 
 import java.util.ArrayList;
@@ -423,9 +425,10 @@ public class PicnicPondBoard extends GameBoard {
         var minigames = gameInstance.getMiniGames();
         if (!minigames.isEmpty()) {
             int index = random.nextInt(minigames.size());
-            MiniGame minigame = minigames.get(index).supplier().get();
+            NamedSupplier<MiniGame> selectedGame = minigames.get(index);
             returningFromMinigame = true;  // Flag to end turn when we return
-            gameInstance.setScreen(minigame);
+            // Go through instruction screen like the menu does
+            gameInstance.setScreen(new MiniGameInstructionScreen(gameInstance, selectedGame.supplier()::get));
         } else {
             // No minigames registered, just end turn
             endTurn();
@@ -458,10 +461,14 @@ public class PicnicPondBoard extends GameBoard {
         gameInstance.batch.draw(backgroundTex, 0, 0, screenWidth, screenHeight);
         gameInstance.batch.end();
         
-        // Draw player sprites on their tiles
+        // Enable blending for transparent rendering
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         
+        // Draw the board tiles
+        drawTiles(screenWidth, screenHeight);
+        
+        // Draw player sprites on their tiles
         drawPlayers(screenWidth, screenHeight);
         
         // Draw junction selection indicators if choosing direction
@@ -471,6 +478,55 @@ public class PicnicPondBoard extends GameBoard {
         
         // Draw UI overlay
         drawUI(screenWidth, screenHeight);
+    }
+    
+    private void drawTiles(float screenWidth, float screenHeight) {
+        float tileRadius = Math.min(screenWidth, screenHeight) * 0.018f;
+        float outlineRadius = tileRadius * 1.3f;
+        
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        
+        // Draw connections between tiles first (as lines)
+        shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 0.8f);
+        for (BoardTile tile : tiles) {
+            float x1 = tile.getPosX() * screenWidth;
+            float y1 = tile.getPosY() * screenHeight;
+            for (BoardTile neighbor : tile.getNeighbors()) {
+                // Only draw each connection once (when this tile's id < neighbor's id)
+                if (tile.getId() < neighbor.getId()) {
+                    float x2 = neighbor.getPosX() * screenWidth;
+                    float y2 = neighbor.getPosY() * screenHeight;
+                    shapeRenderer.rectLine(x1, y1, x2, y2, tileRadius * 0.5f);
+                }
+            }
+        }
+        
+        // Draw tile circles
+        for (BoardTile tile : tiles) {
+            float x = tile.getPosX() * screenWidth;
+            float y = tile.getPosY() * screenHeight;
+            
+            // Draw dark outline
+            shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 1f);
+            shapeRenderer.circle(x, y, outlineRadius);
+            
+            // Draw colored fill based on tile type
+            switch (tile.getType()) {
+                case GREEN:
+                    shapeRenderer.setColor(0.2f, 0.85f, 0.3f, 1f);  // Bright green
+                    break;
+                case RED:
+                    shapeRenderer.setColor(0.9f, 0.25f, 0.3f, 1f);  // Bright red
+                    break;
+                case BLUE:
+                default:
+                    shapeRenderer.setColor(0.3f, 0.5f, 0.9f, 1f);   // Bright blue
+                    break;
+            }
+            shapeRenderer.circle(x, y, tileRadius);
+        }
+        
+        shapeRenderer.end();
     }
     
     private void drawPlayers(float screenWidth, float screenHeight) {
@@ -610,6 +666,15 @@ public class PicnicPondBoard extends GameBoard {
 
     @Override
     public void hide() {
+        // Reset sprite sizes to default when leaving board mode
+        // This prevents the large pixel-based sizes from affecting minigames
+        Player[] players = gameInstance.getPlayers();
+        if (players != null) {
+            for (Player player : players) {
+                player.setSpriteSize(1f);
+                player.getSprite().setPosition(0, 0);
+            }
+        }
     }
 
     @Override

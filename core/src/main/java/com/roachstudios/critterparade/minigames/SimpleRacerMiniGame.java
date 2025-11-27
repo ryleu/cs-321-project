@@ -79,11 +79,22 @@ public class SimpleRacerMiniGame extends MiniGame {
 
     @Override
     public void show() {
-        // Reset positions when the minigame is shown
+        // Update viewport to current screen size
+        game.viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        
+        // Reset game state in case we're replaying
+        finishedCount = 0;
+        gameCompleted = false;
+        for (int i = 0; i < playerFinished.length; i++) {
+            playerFinished[i] = false;
+            placement[i] = null;
+        }
+        
+        // Reset positions and sizes when the minigame is shown
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
-            players[i].getSprite().setX(0);
-            players[i].getSprite().setY(playerSize * i);
+            players[i].setSpriteSize(playerSize);
+            players[i].getSprite().setPosition(0, playerSize * i);
         }
     }
 
