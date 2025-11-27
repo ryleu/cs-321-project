@@ -13,6 +13,9 @@ import com.roachstudios.critterparade.Player;
  * <p>Subclasses should call the constructor with the game instance to gain access
  * to shared players and resources. Override {@link #onGameComplete(Player[])} to
  * handle results when the minigame ends.</p>
+ * 
+ * <p>The ready-up phase and countdown are handled by {@link com.roachstudios.critterparade.menus.MiniGameInstructionScreen}
+ * before the minigame starts.</p>
  */
 public abstract class MiniGame implements Screen {
     

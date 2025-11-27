@@ -24,11 +24,28 @@ import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 /**
  * Displays the placements resulting from a mini game and provides a
  * context-sensitive Continue button based on the current game mode.
+ * 
+ * <p>Automatically continues after a configurable timeout period.</p>
  */
 public class MiniGameResultScreen implements Screen{
     private final CritterParade gameInstance;
     private final Stage stage;
     private Player[] placements;
+    
+    /**
+     * Time remaining before auto-continue (in seconds).
+     */
+    private float autoSkipTimer = 5.0f;
+    
+    /**
+     * Whether the screen has already triggered navigation.
+     */
+    private boolean hasNavigated = false;
+    
+    /**
+     * Label showing the countdown timer.
+     */
+    private TextField timerLabel;
     
     /**
      * @param gameInstance shared game instance used for navigation and skin
@@ -81,13 +98,22 @@ public class MiniGameResultScreen implements Screen{
                 
                 @Override
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
-                    // Create a fresh board - player state is stored in Player objects
-                    gameInstance.setScreen(new PicnicPondBoard(gameInstance));
+                    if (!hasNavigated) {
+                        hasNavigated = true;
+                        // Create a fresh board - player state is stored in Player objects
+                        gameInstance.setScreen(new PicnicPondBoard(gameInstance));
+                    }
                 }
             });
             root.add(changeButton);
+            
+            // Add timer label
+            root.row();
+            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel.setAlignment(Align.center);
+            root.add(timerLabel).expandX().fillX().padTop(10);
         
-        root.setDebug(gameInstance.isDebugMode(), true);
+            root.setDebug(gameInstance.isDebugMode(), true);
         
         }else if(gameInstance.mode == CritterParade.Mode.PRACTICE_MODE){
             root.row();
@@ -97,21 +123,53 @@ public class MiniGameResultScreen implements Screen{
                 
                 @Override
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(new MainMenu(gameInstance));
+                    if (!hasNavigated) {
+                        hasNavigated = true;
+                        gameInstance.setScreen(new MainMenu(gameInstance));
+                    }
                 }
             });
             root.add(changeButton);
+            
+            // Add timer label
+            root.row();
+            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel.setAlignment(Align.center);
+            root.add(timerLabel).expandX().fillX().padTop(10);
         
-        root.setDebug(gameInstance.isDebugMode(), true);
+            root.setDebug(gameInstance.isDebugMode(), true);
         }
         
     }
 
     @Override
     /**
-     * Clears the screen and renders the stage.
+     * Clears the screen, updates the auto-skip timer, and renders the stage.
      */
     public void render(float f) {
+        // Update auto-skip timer
+        if (!hasNavigated) {
+            autoSkipTimer -= f;
+            
+            // Update timer label
+            int secondsLeft = (int) Math.ceil(autoSkipTimer);
+            if (secondsLeft < 0) secondsLeft = 0;
+            if (timerLabel != null) {
+                timerLabel.setText("Continuing in " + secondsLeft + "...");
+            }
+            
+            // Auto-navigate when timer expires
+            if (autoSkipTimer <= 0) {
+                hasNavigated = true;
+                if (gameInstance.mode == CritterParade.Mode.BOARD_MODE) {
+                    gameInstance.setScreen(new PicnicPondBoard(gameInstance));
+                } else if (gameInstance.mode == CritterParade.Mode.PRACTICE_MODE) {
+                    gameInstance.setScreen(new MainMenu(gameInstance));
+                }
+                return;
+            }
+        }
+        
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
