@@ -12,9 +12,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
+import com.roachstudios.critterparade.NamedSupplier;
 import com.roachstudios.critterparade.gameboards.GameBoard;
-
-import java.util.function.Supplier;
 
 /**
  * Presents a list of available boards and navigates to {@link PlayerSelectMenu}
@@ -51,14 +50,13 @@ public class BoardSelectMenu implements Screen {
 
         root.add(title).fillX();
 
-        int i = 0;
-        for (Supplier<GameBoard> gameBoard : gameInstance.getGameBoards()) {
+        for (NamedSupplier<GameBoard> namedBoard : gameInstance.getGameBoards()) {
             root.row();
-            TextButton changeButton = new TextButton("Board %d".formatted(++i), gameInstance.skin);
+            TextButton changeButton = new TextButton(namedBoard.name(), gameInstance.skin);
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, gameBoard::get));
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, namedBoard.supplier()::get));
                 }
             });
             root.add(changeButton);

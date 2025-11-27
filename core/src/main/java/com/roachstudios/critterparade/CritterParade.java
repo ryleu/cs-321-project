@@ -2,6 +2,7 @@ package com.roachstudios.critterparade;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -32,6 +33,42 @@ public class CritterParade extends Game {
     private int numPlayers = 6;
     
     /**
+     * Shared player instances persisting across all screens. Initialized via
+     * {@link #initializePlayers(int)} and accessed through {@link #getPlayers()}.
+     */
+    private Player[] players;
+    
+    /**
+     * Sprite texture paths for each player slot. Used during player initialization.
+     */
+    private static final String[] PLAYER_SPRITE_PATHS = {
+        "PlayerSprites/bumble_bee.png",
+        "PlayerSprites/lady_bug.png",
+        "PlayerSprites/pond_frog.png",
+        "PlayerSprites/red_squirrel.png",
+        "PlayerSprites/field_mouse.png",
+        "PlayerSprites/solider_ant.png"
+    };
+    
+    /**
+     * Display names for each critter, indexed by player slot.
+     */
+    private static final String[] CRITTER_NAMES = {
+        "Bumble Bee",
+        "Lady Bug",
+        "Pond Frog",
+        "Red Squirrel",
+        "Field Mouse",
+        "Soldier Ant"
+    };
+    
+    /**
+     * Textures for player sprites, kept alive for the game lifetime to avoid
+     * reloading and to allow proper disposal.
+     */
+    private Texture[] playerTextures;
+    
+    /**
      * High-level mode affects control flow between screens (e.g., where to go after
      * mini games). We keep it coarse-grained to simplify navigation decisions.
      */
@@ -41,8 +78,8 @@ public class CritterParade extends Game {
     
     public Mode mode;
 
-    private final ArrayList<Supplier<MiniGame>> minigameRegistry = new ArrayList<>();
-    private final ArrayList<Supplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
+    private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
+    private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
 
     private boolean debugMode = true;
 
@@ -62,10 +99,10 @@ public class CritterParade extends Game {
         font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
 
         // register game boards
-        registerGameBoard(() -> new PicnicPondBoard(this));
+        registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
 
         // register mini games
-        registerMiniGame(() -> new SimpleRacerMiniGame(this));
+        registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
 
         this.setScreen(new MainMenu(this));
     }
@@ -83,6 +120,7 @@ public class CritterParade extends Game {
     public void dispose() {
         batch.dispose();
         font.dispose();
+        disposePlayerTextures();
     }
 
     /**
@@ -93,31 +131,38 @@ public class CritterParade extends Game {
     }
 
     /**
-     * Registers a lazy supplier for a mini game. Suppliers are used so screens can
-     * create fresh instances on demand instead of reusing stateful objects.
+     * Registers a lazy supplier for a mini game with a display name.
+     * Suppliers are used so screens can create fresh instances on demand
+     * instead of reusing stateful objects.
+     *
+     * @param name display name for the mini game
+     * @param miniGameSupplier supplier that creates a new mini game instance
      */
-    public void registerMiniGame(Supplier<MiniGame> miniGameSupplier) {
-        minigameRegistry.add(miniGameSupplier);
+    public void registerMiniGame(String name, Supplier<MiniGame> miniGameSupplier) {
+        minigameRegistry.add(new NamedSupplier<>(name, miniGameSupplier));
     }
 
     /**
-     * @return immutable view of all registered mini game suppliers
+     * @return immutable view of all registered mini games with their names
      */
-    public List<Supplier<MiniGame>> getMiniGames() {
+    public List<NamedSupplier<MiniGame>> getMiniGames() {
         return Collections.unmodifiableList(minigameRegistry);
     }
 
     /**
-     * Registers a lazy supplier for a game board.
+     * Registers a lazy supplier for a game board with a display name.
+     *
+     * @param name display name for the game board
+     * @param gameBoardSupplier supplier that creates a new game board instance
      */
-    public void registerGameBoard(Supplier<GameBoard> gameBoardSupplier) {
-        gameBoardRegistry.add(gameBoardSupplier);
+    public void registerGameBoard(String name, Supplier<GameBoard> gameBoardSupplier) {
+        gameBoardRegistry.add(new NamedSupplier<>(name, gameBoardSupplier));
     }
 
     /**
-     * @return immutable view of all registered game board suppliers
+     * @return immutable view of all registered game boards with their names
      */
-    public List<Supplier<GameBoard>> getGameBoards() {
+    public List<NamedSupplier<GameBoard>> getGameBoards() {
         return Collections.unmodifiableList(gameBoardRegistry);
     }
 
@@ -133,5 +178,83 @@ public class CritterParade extends Game {
      */
     public void setNumPlayers(int newNumPlayers) {
         this.numPlayers = newNumPlayers;
+    }
+    
+    /**
+     * Initializes or reinitializes shared player instances for the given count.
+     * Call this when starting a new game session (after player selection).
+     *
+     * @param count number of players to create (1-6)
+     */
+    public void initializePlayers(int count) {
+        if (count < 1 || count > 6) {
+            throw new IllegalArgumentException("Player count must be between 1 and 6");
+        }
+        
+        // Dispose previous textures if they exist
+        disposePlayerTextures();
+        
+        this.numPlayers = count;
+        this.players = new Player[count];
+        this.playerTextures = new Texture[count];
+        
+        for (int i = 0; i < count; i++) {
+            playerTextures[i] = new Texture(PLAYER_SPRITE_PATHS[i]);
+            players[i] = new Player(i + 1, CRITTER_NAMES[i], playerTextures[i]);
+        }
+    }
+    
+    /**
+     * @return the array of active players, or null if not yet initialized
+     */
+    public Player[] getPlayers() {
+        return players;
+    }
+    
+    /**
+     * Gets a specific player by their ID (1-indexed).
+     *
+     * @param playerId the player ID (1-6)
+     * @return the Player instance, or null if invalid ID or not initialized
+     */
+    public Player getPlayer(int playerId) {
+        if (players == null || playerId < 1 || playerId > players.length) {
+            return null;
+        }
+        return players[playerId - 1];
+    }
+    
+    /**
+     * Checks if players have been initialized for the current session.
+     *
+     * @return true if players array exists and has at least one player
+     */
+    public boolean hasPlayers() {
+        return players != null && players.length > 0;
+    }
+    
+    /**
+     * Resets all player scores (fruit, crumbs, wins) to zero.
+     * Useful when starting a new game session.
+     */
+    public void resetPlayerScores() {
+        if (players == null) return;
+        for (Player p : players) {
+            p.resetScores();
+        }
+    }
+    
+    /**
+     * Disposes player textures to free GPU memory.
+     */
+    private void disposePlayerTextures() {
+        if (playerTextures != null) {
+            for (Texture tex : playerTextures) {
+                if (tex != null) {
+                    tex.dispose();
+                }
+            }
+            playerTextures = null;
+        }
     }
 }

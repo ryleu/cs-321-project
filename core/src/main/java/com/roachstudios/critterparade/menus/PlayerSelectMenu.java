@@ -58,7 +58,8 @@ public class PlayerSelectMenu implements Screen {
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setNumPlayers(finalI);
+                    // Initialize shared players for the selected count
+                    gameInstance.initializePlayers(finalI);
                     gameInstance.setScreen(nextScreen.get());
                 }
             });

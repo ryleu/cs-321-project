@@ -11,6 +11,11 @@ import java.util.ArrayList;
  * place to store board tiles as the implementation evolves.
  */
 public abstract class GameBoard implements Screen {
+    
+    /**
+     * @return the display name for this game board
+     */
+    public abstract String getName();
     // Store tiles here so specific boards can share rendering/logic patterns.
     @SuppressWarnings("unused")
     private ArrayList<BoardTile> tiles = new ArrayList<>();

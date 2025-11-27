@@ -12,9 +12,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
+import com.roachstudios.critterparade.NamedSupplier;
 import com.roachstudios.critterparade.minigames.MiniGame;
-
-import java.util.function.Supplier;
 
 /**
  * Presents a list of available mini games and navigates to a {@link PlayerSelectMenu}
@@ -56,14 +55,15 @@ public class MiniGameSelectMenu implements Screen {
 
         root.add(title).fillX();
 
-        int i = 0;
-        for (Supplier<MiniGame> miniGameSupplier : gameInstance.getMiniGames()) {
+        for (NamedSupplier<MiniGame> namedMiniGame : gameInstance.getMiniGames()) {
             root.row();
-            TextButton changeButton = new TextButton("Mini Game %d".formatted(++i), gameInstance.skin);
+            TextButton changeButton = new TextButton(namedMiniGame.name(), gameInstance.skin);
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, miniGameSupplier::get));
+                    // Navigate to player select, then to instruction screen before the minigame
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, 
+                        () -> new MiniGameInstructionScreen(gameInstance, namedMiniGame.supplier()::get)));
                 }
             });
             root.add(changeButton);

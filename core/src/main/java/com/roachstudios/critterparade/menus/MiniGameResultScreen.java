@@ -62,7 +62,7 @@ public class MiniGameResultScreen implements Screen{
         for(int i = 0; i < placements.length; i++){
             root.row();
             
-            TextField place = new TextField((i+1) + ". " + "Player " + (placements[i].getID()), gameInstance.skin);
+            TextField place = new TextField((i+1) + ". " + placements[i].getName(), gameInstance.skin);
             title.setAlignment(Align.center);
             root.add(place);
         }
