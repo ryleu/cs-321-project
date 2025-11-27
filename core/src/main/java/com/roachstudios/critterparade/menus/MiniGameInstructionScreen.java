@@ -72,6 +72,10 @@ public class MiniGameInstructionScreen implements Screen {
         startButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                // Log minigame start
+                gameInstance.log("Starting minigame: %s", gameName);
+                gameInstance.logMinigameStart(gameName);
+                
                 // Create a fresh minigame instance and start it
                 gameInstance.setScreen(miniGameSupplier.get());
             }

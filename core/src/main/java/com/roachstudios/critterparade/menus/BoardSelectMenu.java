@@ -56,6 +56,8 @@ public class BoardSelectMenu implements Screen {
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
+                    gameInstance.log("Board selected: %s", namedBoard.name());
+                    gameInstance.logBoardStart(namedBoard.name());
                     gameInstance.setScreen(new PlayerSelectMenu(gameInstance, namedBoard.supplier()::get));
                 }
             });

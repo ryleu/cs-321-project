@@ -13,6 +13,8 @@ import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
+import com.roachstudios.critterparade.menus.ConsentScreen;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +95,9 @@ public class CritterParade extends Game {
 
     private final boolean debugMode;
     
+    private SettingsManager settings;
+    private SessionLogger sessionLogger;
+    
     /**
      * Creates the game with debug mode disabled.
      */
@@ -127,6 +132,91 @@ public class CritterParade extends Game {
     public void log(String format, Object... args) {
         System.out.println("[CritterParade] " + String.format(format, args));
     }
+    
+    /**
+     * @return the session logger for tracking game events
+     */
+    public SessionLogger getSessionLogger() {
+        return sessionLogger;
+    }
+    
+    /**
+     * Sets the user's logging consent preference and initializes the session logger.
+     *
+     * @param enabled true to enable session logging
+     */
+    public void setLoggingConsent(boolean enabled) {
+        settings.setLoggingEnabled(enabled);
+        settings.save();
+        sessionLogger = new SessionLogger(enabled);
+    }
+    
+    // =========================================================================
+    // Session Logging Helpers (null-safe wrappers)
+    // =========================================================================
+    
+    /**
+     * Logs a mode selection event if logging is enabled.
+     */
+    public void logModeSelected(Mode mode) {
+        if (sessionLogger != null) {
+            sessionLogger.logModeSelected(mode);
+        }
+    }
+    
+    /**
+     * Logs player initialization if logging is enabled.
+     */
+    public void logPlayersInitialized(int count, String[] names) {
+        if (sessionLogger != null) {
+            sessionLogger.logPlayersInitialized(count, names);
+        }
+    }
+    
+    /**
+     * Logs a minigame starting if logging is enabled.
+     */
+    public void logMinigameStart(String minigameName) {
+        if (sessionLogger != null) {
+            sessionLogger.logMinigameStart(minigameName);
+        }
+    }
+    
+    /**
+     * Logs minigame results if logging is enabled.
+     */
+    public void logMinigameEnd(String minigameName, String[] placements, int[] crumbsAwarded) {
+        if (sessionLogger != null) {
+            sessionLogger.logMinigameEnd(minigameName, placements, crumbsAwarded);
+        }
+    }
+    
+    /**
+     * Logs a board game starting if logging is enabled.
+     */
+    public void logBoardStart(String boardName) {
+        if (sessionLogger != null) {
+            sessionLogger.logBoardStart(boardName);
+        }
+    }
+    
+    /**
+     * Logs a player turn if logging is enabled.
+     */
+    public void logPlayerTurn(String playerName, int diceRoll) {
+        if (sessionLogger != null) {
+            sessionLogger.logPlayerTurn(playerName, diceRoll);
+        }
+    }
+    
+    /**
+     * Logs navigation to a screen if logging is enabled.
+     */
+    public void logScreenChange(String screenName) {
+        if (sessionLogger != null) {
+            sessionLogger.logScreenChange(screenName);
+        }
+    }
 
     /**
      * Initializes shared resources and registers boards/mini games.
@@ -149,7 +239,19 @@ public class CritterParade extends Game {
         // register mini games
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
 
-        this.setScreen(new MainMenu(this));
+        // Load settings and check for first run
+        settings = new SettingsManager();
+        
+        if (settings.isFirstRun()) {
+            // Show consent screen on first run
+            log("First run detected, showing consent screen");
+            this.setScreen(new ConsentScreen(this));
+        } else {
+            // Initialize session logger with saved preference
+            sessionLogger = new SessionLogger(settings.isLoggingEnabled());
+            log("Session logging: " + (settings.isLoggingEnabled() ? "enabled" : "disabled"));
+            this.setScreen(new MainMenu(this));
+        }
     }
 
     /**
@@ -163,6 +265,11 @@ public class CritterParade extends Game {
      * Disposes shared resources created in {@link #create()}.
      */
     public void dispose() {
+        // Save session log before disposing
+        if (sessionLogger != null) {
+            sessionLogger.saveSession();
+        }
+        
         batch.dispose();
         font.dispose();
         disposePlayerTextures();
