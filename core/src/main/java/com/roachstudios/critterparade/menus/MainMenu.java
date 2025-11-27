@@ -55,6 +55,8 @@ public class MainMenu implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 gameInstance.mode = CritterParade.Mode.BOARD_MODE;
+                gameInstance.log("Mode selected: BOARD_MODE");
+                gameInstance.logModeSelected(CritterParade.Mode.BOARD_MODE);
                 gameInstance.setScreen(new BoardSelectMenu(gameInstance));
             }
         });
@@ -67,6 +69,8 @@ public class MainMenu implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 gameInstance.mode = CritterParade.Mode.PRACTICE_MODE;
+                gameInstance.log("Mode selected: PRACTICE_MODE");
+                gameInstance.logModeSelected(CritterParade.Mode.PRACTICE_MODE);
                 gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
             }
         });

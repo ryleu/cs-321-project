@@ -293,7 +293,17 @@ public abstract class MiniGame implements Screen {
         }
         
         // Award crumbs based on placement (5 for 1st, scaling down to 0 for last)
-        awardPlacementCrumbs(placements);
+        int[] crumbsAwarded = awardPlacementCrumbs(placements);
+        
+        // Log minigame completion
+        game.log("Minigame '%s' completed", getName());
+        if (placements != null) {
+            String[] names = new String[placements.length];
+            for (int i = 0; i < placements.length; i++) {
+                names[i] = placements[i] != null ? placements[i].getName() : "Unknown";
+            }
+            game.logMinigameEnd(getName(), names, crumbsAwarded);
+        }
         
         game.setScreen(new com.roachstudios.critterparade.menus.MiniGameResultScreen(game, placements));
     }
@@ -309,13 +319,15 @@ public abstract class MiniGame implements Screen {
      * - 2 players: 5, 0
      *
      * @param placements players ordered from 1st to last place
+     * @return array of crumbs awarded to each player, or empty array if invalid
      */
-    protected void awardPlacementCrumbs(Player[] placements) {
+    protected int[] awardPlacementCrumbs(Player[] placements) {
         if (placements == null || placements.length < 2) {
-            return;
+            return new int[0];
         }
         
         int numPlayers = placements.length;
+        int[] crumbsAwarded = new int[numPlayers];
         
         // Award points based on placement: floor(5 * (numPlayers - placement) / (numPlayers - 1))
         // placement is 1-indexed (1 = first place)
@@ -324,8 +336,11 @@ public abstract class MiniGame implements Screen {
                 int placement = i + 1; // Convert to 1-indexed
                 int crumbs = (5 * (numPlayers - placement)) / (numPlayers - 1);
                 placements[i].addCrumbs(crumbs);
+                crumbsAwarded[i] = crumbs;
             }
         }
+        
+        return crumbsAwarded;
     }
     
     // =========================================================================

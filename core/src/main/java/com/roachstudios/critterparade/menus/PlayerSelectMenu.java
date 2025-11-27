@@ -60,6 +60,15 @@ public class PlayerSelectMenu implements Screen {
                 public void changed(ChangeEvent event, Actor actor) {
                     // Initialize shared players for the selected count
                     gameInstance.initializePlayers(finalI);
+                    
+                    // Log player initialization
+                    gameInstance.log("Initialized %d players", finalI);
+                    String[] names = new String[finalI];
+                    for (int j = 0; j < finalI; j++) {
+                        names[j] = gameInstance.getPlayers()[j].getName();
+                    }
+                    gameInstance.logPlayersInitialized(finalI, names);
+                    
                     gameInstance.setScreen(nextScreen.get());
                 }
             });
