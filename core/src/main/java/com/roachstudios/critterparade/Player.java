@@ -19,6 +19,7 @@ public class Player {
     private int numMGWins; 
     
     private int playerID;
+    private String name;
     private Texture playerTex;
     private Sprite playerSprite;
    
@@ -26,12 +27,14 @@ public class Player {
     
     /**
      * @param id unique player ID in [1..6] used for input mapping
+     * @param name display name for the critter (e.g., "Bumble Bee")
      * @param tex sprite texture representing the player
      */
-    public Player(int id, Texture tex){
+    public Player(int id, String name, Texture tex){
         this.fruit = 0;
         this.crumbs = 0;
         this.playerID = id;
+        this.name = name;
         this.numMGWins = 0;  
 
         this.playerTex = tex;
@@ -119,6 +122,13 @@ public class Player {
      */
     public int getID(){
         return this.playerID;
+    }
+    
+    /**
+     * @return the critter's display name
+     */
+    public String getName(){
+        return this.name;
     }
     
     /**

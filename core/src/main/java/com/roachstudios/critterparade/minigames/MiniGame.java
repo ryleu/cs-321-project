@@ -22,6 +22,11 @@ public abstract class MiniGame implements Screen {
     public abstract String getName();
     
     /**
+     * @return instructions explaining how to play this mini game
+     */
+    public abstract String getInstructions();
+    
+    /**
      * Reference to the main game instance for accessing shared resources.
      */
     protected final CritterParade game;

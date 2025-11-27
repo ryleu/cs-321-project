@@ -14,10 +14,19 @@ import com.roachstudios.critterparade.Player;
 public class SimpleRacerMiniGame extends MiniGame {
     
     public static final String NAME = "Simple Racer";
+    public static final String INSTRUCTIONS = 
+        "Race to the finish line!\n\n" +
+        "Repeatedly tap your RIGHT input to move forward.\n" +
+        "First player to cross the finish line wins!";
     
     @Override
     public String getName() {
         return NAME;
+    }
+    
+    @Override
+    public String getInstructions() {
+        return INSTRUCTIONS;
     }
     
     private Texture backgroundTex;
@@ -179,7 +188,7 @@ public class SimpleRacerMiniGame extends MiniGame {
             StringBuilder out = new StringBuilder("Placements:\n");
             for (int i = 0; i < placement.length; i++) {
                 if (placement[i] != null) {
-                    out.append(i + 1).append(". Player ").append(placement[i].getID()).append("\n");
+                    out.append(i + 1).append(". ").append(placement[i].getName()).append("\n");
                 } else {
                     out.append(i + 1).append(". NULL\n");
                 }

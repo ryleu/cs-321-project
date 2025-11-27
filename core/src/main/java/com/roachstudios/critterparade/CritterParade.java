@@ -51,6 +51,18 @@ public class CritterParade extends Game {
     };
     
     /**
+     * Display names for each critter, indexed by player slot.
+     */
+    private static final String[] CRITTER_NAMES = {
+        "Bumble Bee",
+        "Lady Bug",
+        "Pond Frog",
+        "Red Squirrel",
+        "Field Mouse",
+        "Soldier Ant"
+    };
+    
+    /**
      * Textures for player sprites, kept alive for the game lifetime to avoid
      * reloading and to allow proper disposal.
      */
@@ -188,7 +200,7 @@ public class CritterParade extends Game {
         
         for (int i = 0; i < count; i++) {
             playerTextures[i] = new Texture(PLAYER_SPRITE_PATHS[i]);
-            players[i] = new Player(i + 1, playerTextures[i]);
+            players[i] = new Player(i + 1, CRITTER_NAMES[i], playerTextures[i]);
         }
     }
     

@@ -61,7 +61,9 @@ public class MiniGameSelectMenu implements Screen {
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, namedMiniGame.supplier()::get));
+                    // Navigate to player select, then to instruction screen before the minigame
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, 
+                        () -> new MiniGameInstructionScreen(gameInstance, namedMiniGame.supplier()::get)));
                 }
             });
             root.add(changeButton);
