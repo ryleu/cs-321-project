@@ -30,11 +30,13 @@ public class Player {
 
     
     /**
+     * Constructs a new player with the given ID, name, and sprite texture.
+     *
      * @param id unique player ID in [1..6] used for input mapping
      * @param name display name for the critter (e.g., "Bumble Bee")
      * @param tex sprite texture representing the player
      */
-    public Player(int id, String name, Texture tex){
+    public Player(int id, String name, Texture tex) {
         this.fruit = 0;
         this.crumbs = 0;
         this.playerID = id;
@@ -66,23 +68,29 @@ public class Player {
     }
     
     /**
+     * Gets the current fruit count.
+     *
      * @return current fruit count
      */
-    public int getFruit(){
+    public int getFruit() {
         return this.fruit;
     }
     
     /**
+     * Adds crumbs to the player's total.
+     *
      * @param numToAdd number of crumbs to add
      */
-    public void addCrumbs(int numToAdd){
+    public void addCrumbs(int numToAdd) {
         this.crumbs += numToAdd;
     }
     
     /**
      * Subtracts crumbs and clamps at zero.
+     *
+     * @param numToSub number of crumbs to subtract
      */
-    public void subCrumbs(int numToSub){
+    public void subCrumbs(int numToSub) {
         this.crumbs -= numToSub;
         
         if(this.crumbs < 0){
@@ -91,9 +99,11 @@ public class Player {
     }
     
     /**
+     * Gets the current crumb total.
+     *
      * @return current crumb total
      */
-    public int getCrumbs(){
+    public int getCrumbs() {
         return this.crumbs;
     }
     
@@ -105,9 +115,11 @@ public class Player {
     }
     
     /**
+     * Gets the number of mini-game wins.
+     *
      * @return number of mini-game wins
      */
-    public int getWins(){
+    public int getWins() {
         return this.numMGWins;
     }
     
@@ -126,6 +138,8 @@ public class Player {
     // =========================================================================
     
     /**
+     * Gets the index of the tile this player is currently on.
+     *
      * @return the index of the tile this player is currently on
      */
     public int getBoardTileIndex() {
@@ -141,6 +155,8 @@ public class Player {
     }
     
     /**
+     * Gets the index of the tile the player came from.
+     *
      * @return the index of the tile the player came from (-1 if starting)
      */
     public int getPreviousTileIndex() {
@@ -165,38 +181,48 @@ public class Player {
     }
     
     /**
+     * Gets the player's ID used for input mapping.
+     *
      * @return the player's ID used for input mapping
      */
-    public int getID(){
+    public int getID() {
         return this.playerID;
     }
     
     /**
+     * Gets the critter's display name.
+     *
      * @return the critter's display name
      */
-    public String getName(){
+    public String getName() {
         return this.name;
     }
     
     /**
+     * Gets the player's sprite.
+     *
      * @return the player's sprite
      */
-    public Sprite getSprite(){
+    public Sprite getSprite() {
         return this.playerSprite;
     }
     
     /**
      * Sets sprite size uniformly in world units.
+     *
+     * @param size the size in world units for both width and height
      */
-    public void setSpriteSize(float size){
+    public void setSpriteSize(float size) {
         this.playerSprite.setSize(size, size);
         
     }
     
     /**
+     * Checks if the player is pressing up.
+     *
      * @return true while the mapped "Up" key is held for this player
      */
-    public boolean isPressingUp(){
+    public boolean isPressingUp() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyPressed(Input.Keys.W)){
@@ -236,9 +262,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player just pressed up this frame.
+     *
      * @return true on the frame the mapped "Up" key is pressed
      */
-    public boolean justPressedUp(){
+    public boolean justPressedUp() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyJustPressed(Input.Keys.W)){
@@ -278,9 +306,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player is pressing left.
+     *
      * @return true while the mapped "Left" key is held for this player
      */
-    public boolean isPressingLeft(){
+    public boolean isPressingLeft() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyPressed(Input.Keys.A)){
@@ -320,9 +350,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player just pressed left this frame.
+     *
      * @return true on the frame the mapped "Left" key is pressed
      */
-    public boolean justPressedLeft(){
+    public boolean justPressedLeft() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyJustPressed(Input.Keys.A)){
@@ -362,9 +394,11 @@ public class Player {
     }
      
     /**
+     * Checks if the player is pressing down.
+     *
      * @return true while the mapped "Down" key is held for this player
      */
-    public boolean isPressingDown(){
+    public boolean isPressingDown() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyPressed(Input.Keys.S)){
@@ -404,9 +438,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player just pressed down this frame.
+     *
      * @return true on the frame the mapped "Down" key is pressed
      */
-    public boolean justPressedDown(){
+    public boolean justPressedDown() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyJustPressed(Input.Keys.S)){
@@ -446,9 +482,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player is pressing right.
+     *
      * @return true while the mapped "Right" key is held for this player
      */
-    public boolean isPressingRight(){
+    public boolean isPressingRight() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyPressed(Input.Keys.D)){
@@ -488,9 +526,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player just pressed right this frame.
+     *
      * @return true on the frame the mapped "Right" key is pressed
      */
-    public boolean justPressedRight(){
+    public boolean justPressedRight() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyJustPressed(Input.Keys.D)){
@@ -530,9 +570,11 @@ public class Player {
     }
        
     /**
+     * Checks if the player is pressing action.
+     *
      * @return true while the mapped "Action" key is held for this player
      */
-    public boolean isPressingAction(){
+    public boolean isPressingAction() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyPressed(Input.Keys.E)){
@@ -572,9 +614,11 @@ public class Player {
     }
     
     /**
+     * Checks if the player just pressed action this frame.
+     *
      * @return true on the frame the mapped "Action" key is pressed
      */
-    public boolean justPressedAction(){
+    public boolean justPressedAction() {
         switch(this.playerID){
             case 1:
                 if(Gdx.input.isKeyJustPressed(Input.Keys.E)){

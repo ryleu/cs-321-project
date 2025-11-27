@@ -28,6 +28,8 @@ public class BoardTile {
     }
 
     /**
+     * Constructs a new board tile with the specified properties.
+     *
      * @param id unique tile identifier
      * @param posX screen X-position (percentage of screen width, 0-1)
      * @param posY screen Y-position (percentage of screen height, 0-1)
@@ -42,6 +44,8 @@ public class BoardTile {
     }
 
     /**
+     * Gets the unique tile identifier.
+     *
      * @return unique tile identifier
      */
     public int getId() {
@@ -49,6 +53,8 @@ public class BoardTile {
     }
 
     /**
+     * Gets the X position as percentage of screen width.
+     *
      * @return X position as percentage of screen width (0-1)
      */
     public float getPosX() {
@@ -56,6 +62,8 @@ public class BoardTile {
     }
 
     /**
+     * Gets the Y position as percentage of screen height.
+     *
      * @return Y position as percentage of screen height (0-1)
      */
     public float getPosY() {
@@ -63,6 +71,8 @@ public class BoardTile {
     }
 
     /**
+     * Gets the tile type.
+     *
      * @return the tile type
      */
     public Type getType() {
@@ -80,6 +90,8 @@ public class BoardTile {
     }
     
     /**
+     * Gets the neighboring tiles connected to this tile.
+     *
      * @return unmodifiable list of connected tiles
      */
     public List<BoardTile> getNeighbors() {
@@ -106,6 +118,8 @@ public class BoardTile {
     }
     
     /**
+     * Checks if this tile is a junction (crossroads with multiple paths).
+     *
      * @return true if this tile has more than 2 neighbors (a junction/crossroads)
      */
     public boolean isJunction() {
@@ -113,6 +127,8 @@ public class BoardTile {
     }
     
     /**
+     * Checks if this tile is a dead end.
+     *
      * @return true if this tile is a dead end (only 1 neighbor)
      */
     public boolean isDeadEnd() {

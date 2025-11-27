@@ -13,6 +13,15 @@ import java.util.ArrayList;
 public abstract class GameBoard implements Screen {
     
     /**
+     * Default constructor for GameBoard subclasses.
+     */
+    protected GameBoard() {
+        // Default constructor for subclasses
+    }
+    
+    /**
+     * Gets the display name for this game board.
+     *
      * @return the display name for this game board
      */
     public abstract String getName();

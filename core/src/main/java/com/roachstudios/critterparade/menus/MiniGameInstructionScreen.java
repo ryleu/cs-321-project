@@ -59,6 +59,8 @@ public class MiniGameInstructionScreen implements Screen {
     private boolean hasStarted = false;
 
     /**
+     * Constructs the mini game instruction screen.
+     *
      * @param gameInstance shared game instance used for navigation and skin
      * @param miniGameSupplier supplier that creates the mini game instance when ready to start
      */

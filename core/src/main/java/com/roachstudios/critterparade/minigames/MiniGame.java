@@ -20,11 +20,15 @@ import com.roachstudios.critterparade.Player;
 public abstract class MiniGame implements Screen {
     
     /**
+     * Gets the display name for this mini game.
+     *
      * @return the display name for this mini game
      */
     public abstract String getName();
     
     /**
+     * Gets the instructions explaining how to play this mini game.
+     *
      * @return instructions explaining how to play this mini game
      */
     public abstract String getInstructions();
@@ -48,6 +52,8 @@ public abstract class MiniGame implements Screen {
     // =========================================================================
     
     /**
+     * Gets all active players in the current game session.
+     *
      * @return all active players in the current game session
      */
     protected Player[] getPlayers() {
@@ -65,6 +71,8 @@ public abstract class MiniGame implements Screen {
     }
     
     /**
+     * Gets the number of active players.
+     *
      * @return the number of active players
      */
     protected int getPlayerCount() {

@@ -34,6 +34,8 @@ public class HowToPlayMenu implements Screen {
     private final Texture squirrelTexture;
 
     /**
+     * Constructs the How To Play menu screen.
+     *
      * @param gameInstance shared game instance providing skin and navigation
      */
     public HowToPlayMenu(CritterParade gameInstance) {

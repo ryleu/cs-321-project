@@ -25,6 +25,8 @@ public class VictoryScreen implements Screen {
     private final Player winner;
 
     /**
+     * Constructs the victory screen.
+     *
      * @param gameInstance shared game instance used for navigation and skin
      * @param winner the player who won the game
      */

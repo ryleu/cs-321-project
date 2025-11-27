@@ -48,10 +48,12 @@ public class MiniGameResultScreen implements Screen{
     private TextField timerLabel;
     
     /**
+     * Constructs the mini game result screen.
+     *
      * @param gameInstance shared game instance used for navigation and skin
      * @param results ordered array of players from 1st to last place
      */
-    public MiniGameResultScreen(CritterParade gameInstance, Player[] results){
+    public MiniGameResultScreen(CritterParade gameInstance, Player[] results) {
          this.gameInstance = gameInstance;
          this.placements = results;
         // Use FitViewport for consistent layout across window sizes.

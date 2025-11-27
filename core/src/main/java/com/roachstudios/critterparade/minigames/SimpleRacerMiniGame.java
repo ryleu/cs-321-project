@@ -13,7 +13,9 @@ import com.roachstudios.critterparade.Player;
  */
 public class SimpleRacerMiniGame extends MiniGame {
     
+    /** The display name for this mini game. */
     public static final String NAME = "Simple Racer";
+    /** Instructions explaining how to play this mini game. */
     public static final String INSTRUCTIONS = 
         "Race to the finish line!\n\n" +
         "Repeatedly tap your RIGHT input to move forward.\n" +
@@ -52,6 +54,8 @@ public class SimpleRacerMiniGame extends MiniGame {
     private boolean gameCompleted;
     
     /**
+     * Constructs a new Simple Racer mini game.
+     *
      * @param game shared game instance providing viewport, batch, and players
      */
     public SimpleRacerMiniGame(CritterParade game) {

@@ -93,6 +93,8 @@ public class SettingsManager {
     }
     
     /**
+     * Checks if this is the first time the game has been run.
+     *
      * @return true if this is the first time the game has been run
      */
     public boolean isFirstRun() {
@@ -100,6 +102,8 @@ public class SettingsManager {
     }
     
     /**
+     * Checks if session logging is enabled.
+     *
      * @return true if session logging is enabled
      */
     public boolean isLoggingEnabled() {

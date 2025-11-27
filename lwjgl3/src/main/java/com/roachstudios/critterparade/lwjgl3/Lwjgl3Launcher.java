@@ -4,8 +4,23 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.roachstudios.critterparade.CritterParade;
 
-/** Launches the desktop (LWJGL3) application. */
-public class Lwjgl3Launcher {
+/**
+ * Launches the desktop (LWJGL3) application.
+ */
+public final class Lwjgl3Launcher {
+    
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private Lwjgl3Launcher() {
+        // Utility class
+    }
+    
+    /**
+     * Application entry point for the desktop launcher.
+     *
+     * @param args command-line arguments (supports --debug or -d for debug mode)
+     */
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
         

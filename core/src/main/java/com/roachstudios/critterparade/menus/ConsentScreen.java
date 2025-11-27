@@ -22,6 +22,11 @@ public class ConsentScreen implements Screen {
     private final CritterParade game;
     private final Stage stage;
     
+    /**
+     * Constructs the consent screen for session logging preferences.
+     *
+     * @param game the main game instance providing shared resources
+     */
     public ConsentScreen(CritterParade game) {
         this.game = game;
         this.stage = new Stage(new ScreenViewport());

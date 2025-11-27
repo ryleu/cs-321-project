@@ -25,6 +25,8 @@ public class PlayerSelectMenu implements Screen {
     private final Supplier<Screen> nextScreen;
 
     /**
+     * Constructs the player selection menu screen.
+     *
      * @param gameInstance shared game instance used for navigation and skin
      * @param nextScreen supplier for the next screen to show after selecting players
      */

@@ -27,6 +27,7 @@ import java.util.Random;
  */
 public class PicnicPondBoard extends GameBoard {
     
+    /** The display name for this board. */
     public static final String NAME = "Picnic Pond";
     private static final int CRUMBS_REWARD = 3;
     private static final int DIE_MIN = 1;
@@ -79,6 +80,11 @@ public class PicnicPondBoard extends GameBoard {
         GAME_OVER
     }
 
+    /**
+     * Constructs a new Picnic Pond board.
+     *
+     * @param gameInstance the main game instance providing shared resources
+     */
     public PicnicPondBoard(CritterParade gameInstance) {
         this.gameInstance = gameInstance;
         this.random = new Random();

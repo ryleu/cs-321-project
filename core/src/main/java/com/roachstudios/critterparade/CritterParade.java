@@ -27,9 +27,13 @@ import java.util.function.Supplier;
  * mini games, and managing high-level screen navigation.</p>
  */
 public class CritterParade extends Game {
+    /** Shared sprite batch used for rendering across all screens. */
     public SpriteBatch batch;
+    /** Shared bitmap font used for text rendering across all screens. */
     public BitmapFont font;
+    /** Shared UI skin used for scene2d widgets across all screens. */
     public Skin skin;
+    /** Shared viewport used for consistent UI scaling across screen sizes. */
     public FitViewport viewport;
 
     private int numPlayers = 6;
@@ -74,10 +78,14 @@ public class CritterParade extends Game {
      * High-level mode affects control flow between screens (e.g., where to go after
      * mini games). We keep it coarse-grained to simplify navigation decisions.
      */
-    public enum Mode{
-        BOARD_MODE, PRACTICE_MODE;
+    public enum Mode {
+        /** Full board game mode with minigames and fruits. */
+        BOARD_MODE,
+        /** Practice mode for playing individual minigames. */
+        PRACTICE_MODE
     }
     
+    /** Current game mode affecting navigation flow between screens. */
     public Mode mode;
 
     private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
@@ -134,6 +142,8 @@ public class CritterParade extends Game {
     }
     
     /**
+     * Gets the session logger for tracking game events.
+     *
      * @return the session logger for tracking game events
      */
     public SessionLogger getSessionLogger() {
@@ -157,6 +167,8 @@ public class CritterParade extends Game {
     
     /**
      * Logs a mode selection event if logging is enabled.
+     *
+     * @param mode the game mode that was selected
      */
     public void logModeSelected(Mode mode) {
         if (sessionLogger != null) {
@@ -166,6 +178,9 @@ public class CritterParade extends Game {
     
     /**
      * Logs player initialization if logging is enabled.
+     *
+     * @param count the number of players initialized
+     * @param names the names of the players
      */
     public void logPlayersInitialized(int count, String[] names) {
         if (sessionLogger != null) {
@@ -175,6 +190,8 @@ public class CritterParade extends Game {
     
     /**
      * Logs a minigame starting if logging is enabled.
+     *
+     * @param minigameName the name of the minigame being started
      */
     public void logMinigameStart(String minigameName) {
         if (sessionLogger != null) {
@@ -184,6 +201,10 @@ public class CritterParade extends Game {
     
     /**
      * Logs minigame results if logging is enabled.
+     *
+     * @param minigameName the name of the minigame that ended
+     * @param placements the player names in placement order (1st to last)
+     * @param crumbsAwarded the crumbs awarded to each player
      */
     public void logMinigameEnd(String minigameName, String[] placements, int[] crumbsAwarded) {
         if (sessionLogger != null) {
@@ -193,6 +214,8 @@ public class CritterParade extends Game {
     
     /**
      * Logs a board game starting if logging is enabled.
+     *
+     * @param boardName the name of the board being started
      */
     public void logBoardStart(String boardName) {
         if (sessionLogger != null) {
@@ -202,6 +225,9 @@ public class CritterParade extends Game {
     
     /**
      * Logs a player turn if logging is enabled.
+     *
+     * @param playerName the name of the player taking their turn
+     * @param diceRoll the result of the dice roll
      */
     public void logPlayerTurn(String playerName, int diceRoll) {
         if (sessionLogger != null) {
@@ -211,6 +237,8 @@ public class CritterParade extends Game {
     
     /**
      * Logs navigation to a screen if logging is enabled.
+     *
+     * @param screenName the name of the screen being navigated to
      */
     public void logScreenChange(String screenName) {
         if (sessionLogger != null) {
@@ -276,6 +304,8 @@ public class CritterParade extends Game {
     }
 
     /**
+     * Checks if debug mode is enabled.
+     *
      * @return true if debug visuals should be drawn for UI layout
      */
     public boolean isDebugMode() {
@@ -295,6 +325,8 @@ public class CritterParade extends Game {
     }
 
     /**
+     * Gets all registered mini games.
+     *
      * @return immutable view of all registered mini games with their names
      */
     public List<NamedSupplier<MiniGame>> getMiniGames() {
@@ -312,6 +344,8 @@ public class CritterParade extends Game {
     }
 
     /**
+     * Gets all registered game boards.
+     *
      * @return immutable view of all registered game boards with their names
      */
     public List<NamedSupplier<GameBoard>> getGameBoards() {
@@ -319,14 +353,18 @@ public class CritterParade extends Game {
     }
 
     /**
+     * Gets the currently configured number of players.
+     *
      * @return the currently configured number of players
      */
-    public int getNumPlayers(){
+    public int getNumPlayers() {
         return this.numPlayers;
     }
 
     /**
      * Sets the number of players for subsequent boards/mini games.
+     *
+     * @param newNumPlayers the new number of players
      */
     public void setNumPlayers(int newNumPlayers) {
         this.numPlayers = newNumPlayers;
@@ -357,6 +395,8 @@ public class CritterParade extends Game {
     }
     
     /**
+     * Gets the array of active players.
+     *
      * @return the array of active players, or null if not yet initialized
      */
     public Player[] getPlayers() {
@@ -411,6 +451,8 @@ public class CritterParade extends Game {
     }
     
     /**
+     * Gets the current player turn index.
+     *
      * @return the current player turn index (0-based)
      */
     public int getCurrentPlayerTurn() {
@@ -456,6 +498,8 @@ public class CritterParade extends Game {
     }
     
     /**
+     * Checks if the turn should be advanced when returning to the board.
+     *
      * @return true if the turn should be advanced when returning to the board
      */
     public boolean shouldAdvanceTurnOnBoardReturn() {

@@ -24,6 +24,8 @@ public class MainMenu implements Screen {
     private final Texture logoTexture;
 
     /**
+     * Constructs the main menu screen.
+     *
      * @param gameInstance shared game instance used for navigation and skin
      */
     public MainMenu(CritterParade gameInstance) {

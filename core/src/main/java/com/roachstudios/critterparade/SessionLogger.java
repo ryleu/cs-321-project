@@ -106,6 +106,10 @@ public class SessionLogger {
     
     /**
      * Convenience method to log an event with a single key-value pair.
+     *
+     * @param eventType the type of event to log
+     * @param key the key for the data value
+     * @param value the data value to log
      */
     public void logEvent(String eventType, String key, Object value) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -115,6 +119,8 @@ public class SessionLogger {
     
     /**
      * Convenience method to log an event with no additional data.
+     *
+     * @param eventType the type of event to log
      */
     public void logEvent(String eventType) {
         logEvent(eventType, (Map<String, Object>) null);
@@ -122,6 +128,8 @@ public class SessionLogger {
     
     /**
      * Logs a mode selection event.
+     *
+     * @param mode the game mode that was selected
      */
     public void logModeSelected(CritterParade.Mode mode) {
         logEvent("mode_selected", "mode", mode.name());
@@ -129,6 +137,9 @@ public class SessionLogger {
     
     /**
      * Logs player initialization.
+     *
+     * @param count the number of players initialized
+     * @param names the names of the players
      */
     public void logPlayersInitialized(int count, String[] names) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -139,6 +150,8 @@ public class SessionLogger {
     
     /**
      * Logs a minigame starting.
+     *
+     * @param minigameName the name of the minigame being started
      */
     public void logMinigameStart(String minigameName) {
         logEvent("minigame_start", "name", minigameName);
@@ -146,6 +159,10 @@ public class SessionLogger {
     
     /**
      * Logs minigame results.
+     *
+     * @param minigameName the name of the minigame that ended
+     * @param placements the player names in placement order (1st to last)
+     * @param crumbsAwarded the crumbs awarded to each player
      */
     public void logMinigameEnd(String minigameName, String[] placements, int[] crumbsAwarded) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -157,6 +174,8 @@ public class SessionLogger {
     
     /**
      * Logs a board game starting.
+     *
+     * @param boardName the name of the board being started
      */
     public void logBoardStart(String boardName) {
         logEvent("board_start", "name", boardName);
@@ -164,6 +183,9 @@ public class SessionLogger {
     
     /**
      * Logs a player turn.
+     *
+     * @param playerName the name of the player taking their turn
+     * @param diceRoll the result of the dice roll
      */
     public void logPlayerTurn(String playerName, int diceRoll) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -174,6 +196,8 @@ public class SessionLogger {
     
     /**
      * Logs navigation to a screen.
+     *
+     * @param screenName the name of the screen being navigated to
      */
     public void logScreenChange(String screenName) {
         logEvent("screen_change", "screen", screenName);
@@ -237,6 +261,8 @@ public class SessionLogger {
     }
     
     /**
+     * Checks if logging is enabled.
+     *
      * @return true if logging is enabled
      */
     public boolean isEnabled() {
