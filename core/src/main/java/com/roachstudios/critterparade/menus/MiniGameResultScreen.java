@@ -76,7 +76,12 @@ public class MiniGameResultScreen implements Screen{
                 
                 @Override
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
-                    gameInstance.setScreen(new PicnicPondBoard(gameInstance));
+                    // Return to the active board instead of creating a new one
+                    if (gameInstance.getActiveBoard() != null) {
+                        gameInstance.setScreen(gameInstance.getActiveBoard());
+                    } else {
+                        gameInstance.setScreen(new PicnicPondBoard(gameInstance));
+                    }
                 }
             });
             root.add(changeButton);

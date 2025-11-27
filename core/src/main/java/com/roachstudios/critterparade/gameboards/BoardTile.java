@@ -1,35 +1,64 @@
 package com.roachstudios.critterparade.gameboards;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Immutable data object describing a tile on a {@link GameBoard}.
+ * Represents a tile on a {@link GameBoard} with position, type, and connections
+ * to neighboring tiles. Tiles form a graph that players traverse during board mode.
  */
 public class BoardTile {
-    private final int posX;
-    private final int posY;
+    private final int id;
+    private final float posX;
+    private final float posY;
     private final Type type;
-
+    private final List<BoardTile> neighbors;
+    
     /**
-     * @param posX logical grid X-position
-     * @param posY logical grid Y-position
-     * @param type semantic type used to drive gameplay behavior
+     * Tile types determine gameplay effects when a player lands on them.
      */
-    public BoardTile(int posX, int posY, Type type) {
-        this.posX = posX;
-        this.posY = posY;
-        this.type = type;
+    public enum Type {
+        /** Awards crumbs to the player */
+        GREEN,
+        /** No effect */
+        BLUE,
+        /** Triggers a minigame */
+        RED
     }
 
     /**
-     * @return grid X-position
+     * @param id unique tile identifier
+     * @param posX screen X-position (percentage of screen width, 0-1)
+     * @param posY screen Y-position (percentage of screen height, 0-1)
+     * @param type determines gameplay behavior when landed on
      */
-    public int getPosX() {
+    public BoardTile(int id, float posX, float posY, Type type) {
+        this.id = id;
+        this.posX = posX;
+        this.posY = posY;
+        this.type = type;
+        this.neighbors = new ArrayList<>();
+    }
+
+    /**
+     * @return unique tile identifier
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @return X position as percentage of screen width (0-1)
+     */
+    public float getPosX() {
         return posX;
     }
 
     /**
-     * @return grid Y-position
+     * @return Y position as percentage of screen height (0-1)
      */
-    public int getPosY() {
+    public float getPosY() {
         return posY;
     }
 
@@ -39,13 +68,54 @@ public class BoardTile {
     public Type getType() {
         return type;
     }
-
+    
     /**
-     * Types of board tiles. Colors in comments correspond to UI styling.
+     * Adds a neighbor tile (bidirectional connection).
+     * @param neighbor tile to connect to
      */
-    public enum Type {
-        SHOP, // green
-        MINIGAME, // red
-        REGULAR; // blue
+    public void addNeighbor(BoardTile neighbor) {
+        if (!neighbors.contains(neighbor)) {
+            neighbors.add(neighbor);
+        }
+    }
+    
+    /**
+     * @return unmodifiable list of connected tiles
+     */
+    public List<BoardTile> getNeighbors() {
+        return Collections.unmodifiableList(neighbors);
+    }
+    
+    /**
+     * Gets the next tiles available to move to, excluding the tile the player came from.
+     * @param cameFrom the tile the player moved from (null if starting)
+     * @return list of possible next tiles
+     */
+    public List<BoardTile> getNextTiles(BoardTile cameFrom) {
+        if (cameFrom == null || neighbors.size() <= 1) {
+            return Collections.unmodifiableList(neighbors);
+        }
+        
+        List<BoardTile> options = new ArrayList<>();
+        for (BoardTile neighbor : neighbors) {
+            if (neighbor != cameFrom) {
+                options.add(neighbor);
+            }
+        }
+        return options;
+    }
+    
+    /**
+     * @return true if this tile has more than 2 neighbors (a junction/crossroads)
+     */
+    public boolean isJunction() {
+        return neighbors.size() > 2;
+    }
+    
+    /**
+     * @return true if this tile is a dead end (only 1 neighbor)
+     */
+    public boolean isDeadEnd() {
+        return neighbors.size() == 1;
     }
 }

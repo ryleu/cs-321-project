@@ -80,6 +80,11 @@ public class CritterParade extends Game {
 
     private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
+    
+    /**
+     * The currently active game board. Used to return after minigames.
+     */
+    private GameBoard activeBoard;
 
     private boolean debugMode = true;
 
@@ -256,5 +261,27 @@ public class CritterParade extends Game {
             }
             playerTextures = null;
         }
+    }
+    
+    /**
+     * Sets the active game board. Call this when entering board mode.
+     * @param board the board to set as active
+     */
+    public void setActiveBoard(GameBoard board) {
+        this.activeBoard = board;
+    }
+    
+    /**
+     * @return the currently active game board, or null if not in board mode
+     */
+    public GameBoard getActiveBoard() {
+        return activeBoard;
+    }
+    
+    /**
+     * Clears the active board reference. Call when exiting board mode.
+     */
+    public void clearActiveBoard() {
+        this.activeBoard = null;
     }
 }
