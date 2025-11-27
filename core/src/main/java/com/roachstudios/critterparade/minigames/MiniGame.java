@@ -291,7 +291,41 @@ public abstract class MiniGame implements Screen {
         if (placements != null && placements.length > 0 && placements[0] != null) {
             placements[0].addWin();
         }
+        
+        // Award crumbs based on placement (5 for 1st, scaling down to 0 for last)
+        awardPlacementCrumbs(placements);
+        
         game.setScreen(new com.roachstudios.critterparade.menus.MiniGameResultScreen(game, placements));
+    }
+    
+    /**
+     * Awards crumbs to players based on their placement in the minigame.
+     * Points scale linearly from 5 (1st place) to 0 (last place), rounded down.
+     * Supports 2-6 players.
+     * 
+     * Examples:
+     * - 6 players: 5, 4, 3, 2, 1, 0
+     * - 4 players: 5, 3, 1, 0
+     * - 2 players: 5, 0
+     *
+     * @param placements players ordered from 1st to last place
+     */
+    protected void awardPlacementCrumbs(Player[] placements) {
+        if (placements == null || placements.length < 2) {
+            return;
+        }
+        
+        int numPlayers = placements.length;
+        
+        // Award points based on placement: floor(5 * (numPlayers - placement) / (numPlayers - 1))
+        // placement is 1-indexed (1 = first place)
+        for (int i = 0; i < numPlayers; i++) {
+            if (placements[i] != null) {
+                int placement = i + 1; // Convert to 1-indexed
+                int crumbs = (5 * (numPlayers - placement)) / (numPlayers - 1);
+                placements[i].addCrumbs(crumbs);
+            }
+        }
     }
     
     // =========================================================================

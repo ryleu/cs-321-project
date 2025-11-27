@@ -91,7 +91,42 @@ public class CritterParade extends Game {
      */
     private boolean advanceTurnOnBoardReturn = false;
 
-    private boolean debugMode = true;
+    private final boolean debugMode;
+    
+    /**
+     * Creates the game with debug mode disabled.
+     */
+    public CritterParade() {
+        this(false);
+    }
+    
+    /**
+     * Creates the game with the specified debug mode.
+     *
+     * @param debugMode true to enable debug visuals
+     */
+    public CritterParade(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
+    
+    /**
+     * Logs a message to the console.
+     *
+     * @param message the message to log
+     */
+    public void log(String message) {
+        System.out.println("[CritterParade] " + message);
+    }
+    
+    /**
+     * Logs a formatted message to the console.
+     *
+     * @param format the format string
+     * @param args the format arguments
+     */
+    public void log(String format, Object... args) {
+        System.out.println("[CritterParade] " + String.format(format, args));
+    }
 
     /**
      * Initializes shared resources and registers boards/mini games.

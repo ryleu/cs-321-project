@@ -8,11 +8,20 @@ import com.roachstudios.critterparade.CritterParade;
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
-        createApplication();
+        
+        boolean debugMode = false;
+        for (String arg : args) {
+            if ("--debug".equals(arg) || "-d".equals(arg)) {
+                debugMode = true;
+                break;
+            }
+        }
+        
+        createApplication(debugMode);
     }
 
-    private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new CritterParade(), getDefaultConfiguration());
+    private static Lwjgl3Application createApplication(boolean debugMode) {
+        return new Lwjgl3Application(new CritterParade(debugMode), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
