@@ -59,11 +59,17 @@ public class MiniGameResultScreen implements Screen{
 
         root.add(title).fillX();
         
-        for(int i = 0; i < placements.length; i++){
+        int numPlayers = placements.length;
+        for(int i = 0; i < numPlayers; i++){
             root.row();
             
-            TextField place = new TextField((i+1) + ". " + placements[i].getName(), gameInstance.skin);
-            title.setAlignment(Align.center);
+            // Calculate points awarded: floor(5 * (numPlayers - placement) / (numPlayers - 1))
+            int placement = i + 1;
+            int pointsAwarded = (5 * (numPlayers - placement)) / (numPlayers - 1);
+            
+            String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
+            TextField place = new TextField(resultText, gameInstance.skin);
+            place.setAlignment(Align.center);
             root.add(place);
         }
         
@@ -76,6 +82,7 @@ public class MiniGameResultScreen implements Screen{
                 
                 @Override
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
+                    // Create a fresh board - player state is stored in Player objects
                     gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                 }
             });

@@ -80,8 +80,53 @@ public class CritterParade extends Game {
 
     private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
+    
+    /**
+     * Current player's turn index (0-based). Persists across board recreations.
+     */
+    private int currentPlayerTurn = 0;
+    
+    /**
+     * Flag to advance to next player's turn when returning from minigame.
+     */
+    private boolean advanceTurnOnBoardReturn = false;
 
-    private boolean debugMode = true;
+    private final boolean debugMode;
+    
+    /**
+     * Creates the game with debug mode disabled.
+     */
+    public CritterParade() {
+        this(false);
+    }
+    
+    /**
+     * Creates the game with the specified debug mode.
+     *
+     * @param debugMode true to enable debug visuals
+     */
+    public CritterParade(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
+    
+    /**
+     * Logs a message to the console.
+     *
+     * @param message the message to log
+     */
+    public void log(String message) {
+        System.out.println("[CritterParade] " + message);
+    }
+    
+    /**
+     * Logs a formatted message to the console.
+     *
+     * @param format the format string
+     * @param args the format arguments
+     */
+    public void log(String format, Object... args) {
+        System.out.println("[CritterParade] " + String.format(format, args));
+    }
 
     /**
      * Initializes shared resources and registers boards/mini games.
@@ -256,5 +301,65 @@ public class CritterParade extends Game {
             }
             playerTextures = null;
         }
+    }
+    
+    /**
+     * @return the current player turn index (0-based)
+     */
+    public int getCurrentPlayerTurn() {
+        return currentPlayerTurn;
+    }
+    
+    /**
+     * Sets the current player turn index.
+     * @param turn the turn index (0-based)
+     */
+    public void setCurrentPlayerTurn(int turn) {
+        this.currentPlayerTurn = turn;
+    }
+    
+    /**
+     * Advances to the next player's turn.
+     */
+    public void advancePlayerTurn() {
+        currentPlayerTurn = (currentPlayerTurn + 1) % numPlayers;
+    }
+    
+    /**
+     * Resets the turn to player 0.
+     */
+    public void resetPlayerTurn() {
+        currentPlayerTurn = 0;
+    }
+    
+    /**
+     * Resets all board game state for a new game.
+     * Resets player turn, board positions, and scores.
+     * @param startTileIndex the tile index where players start
+     */
+    public void resetBoardGameState(int startTileIndex) {
+        currentPlayerTurn = 0;
+        advanceTurnOnBoardReturn = false;
+        if (players != null) {
+            for (Player p : players) {
+                p.resetBoardPosition(startTileIndex);
+                p.resetScores();
+            }
+        }
+    }
+    
+    /**
+     * @return true if the turn should be advanced when returning to the board
+     */
+    public boolean shouldAdvanceTurnOnBoardReturn() {
+        return advanceTurnOnBoardReturn;
+    }
+    
+    /**
+     * Sets the flag to advance turn when returning to board.
+     * @param advance true to advance turn on return
+     */
+    public void setAdvanceTurnOnBoardReturn(boolean advance) {
+        this.advanceTurnOnBoardReturn = advance;
     }
 }
