@@ -15,6 +15,14 @@ import com.roachstudios.critterparade.CritterParade;
  * A simple board implementation that displays a static background image.
  */
 public class PicnicPondBoard extends GameBoard {
+    
+    public static final String NAME = "Picnic Pond";
+    
+    @Override
+    public String getName() {
+        return NAME;
+    }
+    
     private final CritterParade gameInstance;
     private final Stage stage;
 

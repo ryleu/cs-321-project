@@ -105,6 +105,16 @@ public class Player {
     }
     
     /**
+     * Resets all score-related fields (fruit, crumbs, wins) to zero.
+     * Useful when starting a new game session.
+     */
+    public void resetScores() {
+        this.fruit = 0;
+        this.crumbs = 0;
+        this.numMGWins = 0;
+    }
+    
+    /**
      * @return the player's ID used for input mapping
      */
     public int getID(){
