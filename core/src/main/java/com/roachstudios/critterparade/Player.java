@@ -22,6 +22,10 @@ public class Player {
     private String name;
     private Texture playerTex;
     private Sprite playerSprite;
+    
+    // Board game state
+    private int boardTileIndex = 0;
+    private int previousTileIndex = -1;
    
 
     
@@ -115,6 +119,49 @@ public class Player {
         this.fruit = 0;
         this.crumbs = 0;
         this.numMGWins = 0;
+    }
+    
+    // =========================================================================
+    // Board Position State
+    // =========================================================================
+    
+    /**
+     * @return the index of the tile this player is currently on
+     */
+    public int getBoardTileIndex() {
+        return boardTileIndex;
+    }
+    
+    /**
+     * Sets the player's current tile index on the board.
+     * @param index the tile index
+     */
+    public void setBoardTileIndex(int index) {
+        this.boardTileIndex = index;
+    }
+    
+    /**
+     * @return the index of the tile the player came from (-1 if starting)
+     */
+    public int getPreviousTileIndex() {
+        return previousTileIndex;
+    }
+    
+    /**
+     * Sets the previous tile index (for junction direction tracking).
+     * @param index the previous tile index
+     */
+    public void setPreviousTileIndex(int index) {
+        this.previousTileIndex = index;
+    }
+    
+    /**
+     * Resets board position to starting state.
+     * @param startTileIndex the starting tile index
+     */
+    public void resetBoardPosition(int startTileIndex) {
+        this.boardTileIndex = startTileIndex;
+        this.previousTileIndex = -1;
     }
     
     /**

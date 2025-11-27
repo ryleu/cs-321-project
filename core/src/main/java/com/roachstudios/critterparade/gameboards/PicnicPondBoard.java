@@ -3,6 +3,7 @@ package com.roachstudios.critterparade.gameboards;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -41,17 +42,13 @@ public class PicnicPondBoard extends GameBoard {
     private BitmapFont font;
     private GlyphLayout glyphLayout;
     private Random random;
+    private OrthographicCamera camera;
     
     // Board data
     private ArrayList<BoardTile> tiles;
-    private int startTileIndex = 0;
+    private static final int START_TILE_INDEX = 0;
     
-    // Player board state
-    private int[] playerTileIndex;      // Current tile index for each player
-    private BoardTile[] playerCameFrom; // The tile each player came from (for junctions)
-    
-    // Turn state
-    private int currentPlayerIndex = 0;
+    // Turn state (current player turn is stored in CritterParade)
     private GameState state = GameState.WAITING_FOR_ROLL;
     private int dieResult = 0;
     private int movesRemaining = 0;
@@ -67,9 +64,6 @@ public class PicnicPondBoard extends GameBoard {
     // Message display
     private String statusMessage = "";
     private float messageTimer = 0;
-    
-    // Track if we need to end turn after returning from minigame
-    private boolean returningFromMinigame = false;
     
     private enum GameState {
         WAITING_FOR_ROLL,
@@ -87,16 +81,6 @@ public class PicnicPondBoard extends GameBoard {
         this.junctionOptions = new ArrayList<>();
         
         createBoardTiles();
-        
-        // Initialize player positions
-        int playerCount = gameInstance.getNumPlayers();
-        playerTileIndex = new int[playerCount];
-        playerCameFrom = new BoardTile[playerCount];
-        
-        for (int i = 0; i < playerCount; i++) {
-            playerTileIndex[i] = startTileIndex;
-            playerCameFrom[i] = null;
-        }
     }
 
     /**
@@ -240,32 +224,31 @@ public class PicnicPondBoard extends GameBoard {
 
     @Override
     public void show() {
-        // Register this board as active so we can return to it after minigames
-        gameInstance.setActiveBoard(this);
+        // Initialize resources
+        backgroundTex = new Texture("board/PicnicPond/background.png");
+        shapeRenderer = new ShapeRenderer();
+        font = new BitmapFont();
+        font.setUseIntegerPositions(false);
+        glyphLayout = new GlyphLayout();
         
-        // Only initialize resources if not already done
-        if (backgroundTex == null) {
-            backgroundTex = new Texture("board/PicnicPond/background.png");
-        }
-        if (shapeRenderer == null) {
-            shapeRenderer = new ShapeRenderer();
-        }
-        if (font == null) {
-            font = new BitmapFont();
-            font.setUseIntegerPositions(false);
-            font.getData().setScale(0.05f);
-        }
-        if (glyphLayout == null) {
-            glyphLayout = new GlyphLayout();
-        }
+        // Create camera for screen-coordinate rendering
+        float w = Gdx.graphics.getWidth();
+        float h = Gdx.graphics.getHeight();
+        camera = new OrthographicCamera(w, h);
+        camera.position.set(w / 2, h / 2, 0);
+        camera.update();
         
         // If returning from minigame, advance to next turn
-        if (returningFromMinigame) {
-            returningFromMinigame = false;
-            endTurn();
+        // Otherwise, this is a fresh board start - reset positions
+        if (gameInstance.shouldAdvanceTurnOnBoardReturn()) {
+            gameInstance.setAdvanceTurnOnBoardReturn(false);
+            gameInstance.advancePlayerTurn();
         } else {
-            updateStatusMessage();
+            // Fresh start - reset all board game state
+            gameInstance.resetBoardGameState(START_TILE_INDEX);
         }
+        
+        updateStatusMessage();
     }
 
     @Override
@@ -276,7 +259,7 @@ public class PicnicPondBoard extends GameBoard {
     }
     
     private void handleInput() {
-        Player currentPlayer = gameInstance.getPlayers()[currentPlayerIndex];
+        Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
         
         switch (state) {
             case WAITING_FOR_ROLL:
@@ -310,7 +293,7 @@ public class PicnicPondBoard extends GameBoard {
         dieResult = random.nextInt(DIE_MAX - DIE_MIN + 1) + DIE_MIN;
         movesRemaining = dieResult;
         state = GameState.MOVING;
-        statusMessage = gameInstance.getPlayers()[currentPlayerIndex].getName() + " rolled a " + dieResult + "!";
+        statusMessage = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()].getName() + " rolled a " + dieResult + "!";
         messageTimer = 1.0f;
         moveTimer = MOVE_DELAY;
     }
@@ -354,8 +337,10 @@ public class PicnicPondBoard extends GameBoard {
             return;
         }
         
-        BoardTile currentTile = tiles.get(playerTileIndex[currentPlayerIndex]);
-        BoardTile cameFrom = playerCameFrom[currentPlayerIndex];
+        Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
+        BoardTile currentTile = tiles.get(currentPlayer.getBoardTileIndex());
+        int prevIndex = currentPlayer.getPreviousTileIndex();
+        BoardTile cameFrom = (prevIndex >= 0) ? tiles.get(prevIndex) : null;
         List<BoardTile> nextOptions = currentTile.getNextTiles(cameFrom);
         
         if (nextOptions.isEmpty()) {
@@ -378,9 +363,9 @@ public class PicnicPondBoard extends GameBoard {
     }
     
     private void moveToTile(BoardTile targetTile) {
-        BoardTile currentTile = tiles.get(playerTileIndex[currentPlayerIndex]);
-        playerCameFrom[currentPlayerIndex] = currentTile;
-        playerTileIndex[currentPlayerIndex] = targetTile.getId();
+        Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
+        currentPlayer.setPreviousTileIndex(currentPlayer.getBoardTileIndex());
+        currentPlayer.setBoardTileIndex(targetTile.getId());
         movesRemaining--;
         moveTimer = MOVE_DELAY;
         
@@ -392,8 +377,8 @@ public class PicnicPondBoard extends GameBoard {
     }
     
     private void applyTileEffect() {
-        BoardTile currentTile = tiles.get(playerTileIndex[currentPlayerIndex]);
-        Player currentPlayer = gameInstance.getPlayers()[currentPlayerIndex];
+        Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
+        BoardTile currentTile = tiles.get(currentPlayer.getBoardTileIndex());
         
         switch (currentTile.getType()) {
             case GREEN:
@@ -426,7 +411,7 @@ public class PicnicPondBoard extends GameBoard {
         if (!minigames.isEmpty()) {
             int index = random.nextInt(minigames.size());
             NamedSupplier<MiniGame> selectedGame = minigames.get(index);
-            returningFromMinigame = true;  // Flag to end turn when we return
+            gameInstance.setAdvanceTurnOnBoardReturn(true);  // Flag to advance turn when we return
             // Go through instruction screen like the menu does
             gameInstance.setScreen(new MiniGameInstructionScreen(gameInstance, selectedGame.supplier()::get));
         } else {
@@ -437,7 +422,7 @@ public class PicnicPondBoard extends GameBoard {
     
     private void endTurn() {
         // Move to next player
-        currentPlayerIndex = (currentPlayerIndex + 1) % gameInstance.getNumPlayers();
+        gameInstance.advancePlayerTurn();
         state = GameState.WAITING_FOR_ROLL;
         movesRemaining = 0;
         dieResult = 0;
@@ -445,7 +430,7 @@ public class PicnicPondBoard extends GameBoard {
     }
     
     private void updateStatusMessage() {
-        Player currentPlayer = gameInstance.getPlayers()[currentPlayerIndex];
+        Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
         statusMessage = currentPlayer.getName() + "'s turn! Press Action to roll.";
     }
     
@@ -455,6 +440,16 @@ public class PicnicPondBoard extends GameBoard {
         
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
+        
+        // Update camera for current screen size
+        camera.viewportWidth = screenWidth;
+        camera.viewportHeight = screenHeight;
+        camera.position.set(screenWidth / 2, screenHeight / 2, 0);
+        camera.update();
+        
+        // Set projection matrices for screen-coordinate rendering
+        gameInstance.batch.setProjectionMatrix(camera.combined);
+        shapeRenderer.setProjectionMatrix(camera.combined);
         
         // Draw background
         gameInstance.batch.begin();
@@ -532,16 +527,17 @@ public class PicnicPondBoard extends GameBoard {
     private void drawPlayers(float screenWidth, float screenHeight) {
         Player[] players = gameInstance.getPlayers();
         float spriteSize = Math.min(screenWidth, screenHeight) * 0.06f;
+        int currentTurn = gameInstance.getCurrentPlayerTurn();
         
         // First pass: draw selection indicator for current player using ShapeRenderer
-        BoardTile currentTile = tiles.get(playerTileIndex[currentPlayerIndex]);
+        BoardTile currentTile = tiles.get(players[currentTurn].getBoardTileIndex());
         float cx = currentTile.getPosX() * screenWidth - spriteSize / 2;
         float cy = currentTile.getPosY() * screenHeight - spriteSize / 2;
         
         // Calculate offset for current player
         int currentSameCount = 0;
-        for (int j = 0; j < currentPlayerIndex; j++) {
-            if (playerTileIndex[j] == playerTileIndex[currentPlayerIndex]) {
+        for (int j = 0; j < currentTurn; j++) {
+            if (players[j].getBoardTileIndex() == players[currentTurn].getBoardTileIndex()) {
                 currentSameCount++;
             }
         }
@@ -557,14 +553,14 @@ public class PicnicPondBoard extends GameBoard {
         gameInstance.batch.begin();
         
         for (int i = 0; i < players.length; i++) {
-            BoardTile tile = tiles.get(playerTileIndex[i]);
+            BoardTile tile = tiles.get(players[i].getBoardTileIndex());
             float x = tile.getPosX() * screenWidth - spriteSize / 2;
             float y = tile.getPosY() * screenHeight - spriteSize / 2;
             
             // Offset slightly for multiple players on same tile
             int sameCount = 0;
             for (int j = 0; j < i; j++) {
-                if (playerTileIndex[j] == playerTileIndex[i]) {
+                if (players[j].getBoardTileIndex() == players[i].getBoardTileIndex()) {
                     sameCount++;
                 }
             }
@@ -630,7 +626,7 @@ public class PicnicPondBoard extends GameBoard {
         for (int i = 0; i < players.length; i++) {
             Player p = players[i];
             String stats = p.getName() + ": " + p.getCrumbs() + " crumbs";
-            if (i == currentPlayerIndex) {
+            if (i == gameInstance.getCurrentPlayerTurn()) {
                 font.setColor(Color.YELLOW);
             } else {
                 font.setColor(Color.WHITE);

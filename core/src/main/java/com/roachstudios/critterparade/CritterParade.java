@@ -82,9 +82,14 @@ public class CritterParade extends Game {
     private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
     
     /**
-     * The currently active game board. Used to return after minigames.
+     * Current player's turn index (0-based). Persists across board recreations.
      */
-    private GameBoard activeBoard;
+    private int currentPlayerTurn = 0;
+    
+    /**
+     * Flag to advance to next player's turn when returning from minigame.
+     */
+    private boolean advanceTurnOnBoardReturn = false;
 
     private boolean debugMode = true;
 
@@ -264,24 +269,62 @@ public class CritterParade extends Game {
     }
     
     /**
-     * Sets the active game board. Call this when entering board mode.
-     * @param board the board to set as active
+     * @return the current player turn index (0-based)
      */
-    public void setActiveBoard(GameBoard board) {
-        this.activeBoard = board;
+    public int getCurrentPlayerTurn() {
+        return currentPlayerTurn;
     }
     
     /**
-     * @return the currently active game board, or null if not in board mode
+     * Sets the current player turn index.
+     * @param turn the turn index (0-based)
      */
-    public GameBoard getActiveBoard() {
-        return activeBoard;
+    public void setCurrentPlayerTurn(int turn) {
+        this.currentPlayerTurn = turn;
     }
     
     /**
-     * Clears the active board reference. Call when exiting board mode.
+     * Advances to the next player's turn.
      */
-    public void clearActiveBoard() {
-        this.activeBoard = null;
+    public void advancePlayerTurn() {
+        currentPlayerTurn = (currentPlayerTurn + 1) % numPlayers;
+    }
+    
+    /**
+     * Resets the turn to player 0.
+     */
+    public void resetPlayerTurn() {
+        currentPlayerTurn = 0;
+    }
+    
+    /**
+     * Resets all board game state for a new game.
+     * Resets player turn, board positions, and scores.
+     * @param startTileIndex the tile index where players start
+     */
+    public void resetBoardGameState(int startTileIndex) {
+        currentPlayerTurn = 0;
+        advanceTurnOnBoardReturn = false;
+        if (players != null) {
+            for (Player p : players) {
+                p.resetBoardPosition(startTileIndex);
+                p.resetScores();
+            }
+        }
+    }
+    
+    /**
+     * @return true if the turn should be advanced when returning to the board
+     */
+    public boolean shouldAdvanceTurnOnBoardReturn() {
+        return advanceTurnOnBoardReturn;
+    }
+    
+    /**
+     * Sets the flag to advance turn when returning to board.
+     * @param advance true to advance turn on return
+     */
+    public void setAdvanceTurnOnBoardReturn(boolean advance) {
+        this.advanceTurnOnBoardReturn = advance;
     }
 }
