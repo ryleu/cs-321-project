@@ -12,6 +12,7 @@ import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.NamedSupplier;
 import com.roachstudios.critterparade.Player;
 import com.roachstudios.critterparade.menus.MiniGameInstructionScreen;
+import com.roachstudios.critterparade.menus.VictoryScreen;
 import com.roachstudios.critterparade.minigames.MiniGame;
 
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ public class PicnicPondBoard extends GameBoard {
     private static final int CRUMBS_REWARD = 3;
     private static final int DIE_MIN = 1;
     private static final int DIE_MAX = 6;
+    private static final int FRUIT_COST = 20;
+    private static final int FRUITS_TO_WIN = 5;
     
     @Override
     public String getName() {
@@ -47,6 +50,7 @@ public class PicnicPondBoard extends GameBoard {
     // Board data
     private ArrayList<BoardTile> tiles;
     private static final int START_TILE_INDEX = 0;
+    private int shopTileIndex = -1;
     
     // Turn state (current player turn is stored in CritterParade)
     private GameState state = GameState.WAITING_FOR_ROLL;
@@ -71,7 +75,8 @@ public class PicnicPondBoard extends GameBoard {
         MOVING,
         CHOOSING_DIRECTION,
         TILE_EFFECT,
-        STARTING_MINIGAME
+        STARTING_MINIGAME,
+        GAME_OVER
     }
 
     public PicnicPondBoard(CritterParade gameInstance) {
@@ -81,6 +86,18 @@ public class PicnicPondBoard extends GameBoard {
         this.junctionOptions = new ArrayList<>();
         
         createBoardTiles();
+        selectNewShopTile();
+    }
+    
+    /**
+     * Selects a random tile to be the shop, excluding the start tile.
+     */
+    private void selectNewShopTile() {
+        int newShopIndex;
+        do {
+            newShopIndex = random.nextInt(tiles.size());
+        } while (newShopIndex == START_TILE_INDEX || newShopIndex == shopTileIndex);
+        shopTileIndex = newShopIndex;
     }
 
     /**
@@ -325,6 +342,20 @@ public class PicnicPondBoard extends GameBoard {
                 }
                 break;
                 
+            case GAME_OVER:
+                if (messageTimer <= 0) {
+                    // Find the winner (player with most fruits)
+                    Player winner = null;
+                    for (Player p : gameInstance.getPlayers()) {
+                        if (p.getFruit() >= FRUITS_TO_WIN) {
+                            winner = p;
+                            break;
+                        }
+                    }
+                    gameInstance.setScreen(new VictoryScreen(gameInstance, winner));
+                }
+                break;
+                
             default:
                 break;
         }
@@ -379,6 +410,33 @@ public class PicnicPondBoard extends GameBoard {
     private void applyTileEffect() {
         Player currentPlayer = gameInstance.getPlayers()[gameInstance.getCurrentPlayerTurn()];
         BoardTile currentTile = tiles.get(currentPlayer.getBoardTileIndex());
+        
+        // Check if player landed on shop tile
+        if (currentTile.getId() == shopTileIndex) {
+            if (currentPlayer.getCrumbs() >= FRUIT_COST) {
+                // Player can buy fruit
+                currentPlayer.subCrumbs(FRUIT_COST);
+                currentPlayer.addFruit();
+                statusMessage = currentPlayer.getName() + " bought a fruit! (" + currentPlayer.getFruit() + "/" + FRUITS_TO_WIN + ")";
+                messageTimer = 2.0f;
+                
+                // Move shop to new location
+                selectNewShopTile();
+                
+                // Check win condition
+                if (currentPlayer.getFruit() >= FRUITS_TO_WIN) {
+                    statusMessage = currentPlayer.getName() + " wins with " + FRUITS_TO_WIN + " fruits!";
+                    messageTimer = 3.0f;
+                    state = GameState.GAME_OVER;
+                    return;
+                }
+            } else {
+                statusMessage = currentPlayer.getName() + " needs " + FRUIT_COST + " crumbs for fruit! (has " + currentPlayer.getCrumbs() + ")";
+                messageTimer = 2.0f;
+            }
+            state = GameState.TILE_EFFECT;
+            return;
+        }
         
         switch (currentTile.getType()) {
             case GREEN:
@@ -505,18 +563,22 @@ public class PicnicPondBoard extends GameBoard {
             shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 1f);
             shapeRenderer.circle(x, y, outlineRadius);
             
-            // Draw colored fill based on tile type
-            switch (tile.getType()) {
-                case GREEN:
-                    shapeRenderer.setColor(0.2f, 0.85f, 0.3f, 1f);  // Bright green
-                    break;
-                case RED:
-                    shapeRenderer.setColor(0.9f, 0.25f, 0.3f, 1f);  // Bright red
-                    break;
-                case BLUE:
-                default:
-                    shapeRenderer.setColor(0.3f, 0.5f, 0.9f, 1f);   // Bright blue
-                    break;
+            // Draw colored fill based on tile type (shop overrides normal type)
+            if (tile.getId() == shopTileIndex) {
+                shapeRenderer.setColor(0.7f, 0.3f, 0.9f, 1f);  // Purple for shop
+            } else {
+                switch (tile.getType()) {
+                    case GREEN:
+                        shapeRenderer.setColor(0.2f, 0.85f, 0.3f, 1f);  // Bright green
+                        break;
+                    case RED:
+                        shapeRenderer.setColor(0.9f, 0.25f, 0.3f, 1f);  // Bright red
+                        break;
+                    case BLUE:
+                    default:
+                        shapeRenderer.setColor(0.3f, 0.5f, 0.9f, 1f);   // Bright blue
+                        break;
+                }
             }
             shapeRenderer.circle(x, y, tileRadius);
         }
@@ -607,25 +669,40 @@ public class PicnicPondBoard extends GameBoard {
         
         // Background for text
         gameInstance.batch.end();
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 0.7f);
+        shapeRenderer.setColor(0.25f, 0.25f, 0.25f, 0.7f);
         shapeRenderer.rect(0, screenHeight - glyphLayout.height - 30, screenWidth, glyphLayout.height + 30);
         shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
         
         gameInstance.batch.begin();
         font.draw(gameInstance.batch, statusMessage, 
             (screenWidth - glyphLayout.width) / 2, 
             screenHeight - 10);
         
-        // Draw player stats at bottom
-        float statsY = 80;
+        // Draw player stats at bottom with background
+        gameInstance.batch.end();
+        
+        Player[] players = gameInstance.getPlayers();
+        float statsBarHeight = 40;
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(0.25f, 0.25f, 0.25f, 0.7f);
+        shapeRenderer.rect(0, 0, screenWidth, statsBarHeight);
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+        
+        gameInstance.batch.begin();
+        float statsY = statsBarHeight - 10;
         float statsX = 20;
         font.getData().setScale(screenHeight / 600f);
         
-        Player[] players = gameInstance.getPlayers();
         for (int i = 0; i < players.length; i++) {
             Player p = players[i];
-            String stats = p.getName() + ": " + p.getCrumbs() + " crumbs";
+            String stats = p.getName() + ": " + p.getFruit() + " fruit, " + p.getCrumbs() + " crumbs";
             if (i == gameInstance.getCurrentPlayerTurn()) {
                 font.setColor(Color.YELLOW);
             } else {

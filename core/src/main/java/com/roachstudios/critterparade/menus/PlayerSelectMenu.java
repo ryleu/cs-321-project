@@ -49,7 +49,7 @@ public class PlayerSelectMenu implements Screen {
         TextField title = new TextField("Select Number of Players", gameInstance.skin);
         title.setAlignment(Align.center);
 
-        root.add(title).fillX();
+        root.add(title).expandX().fillX();
 
         for (int i = 2; i <= 6; i++) {
             root.row();

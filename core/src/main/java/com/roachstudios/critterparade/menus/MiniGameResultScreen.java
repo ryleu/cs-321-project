@@ -15,7 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
@@ -37,9 +37,8 @@ public class MiniGameResultScreen implements Screen{
     public MiniGameResultScreen(CritterParade gameInstance, Player[] results){
          this.gameInstance = gameInstance;
          this.placements = results;
-        // Use ScreenViewport to present results at actual pixel size regardless
-        // of window dimensions; this keeps text crisp for simple static lists.
-        stage = new Stage(new ScreenViewport());
+        // Use FitViewport for consistent layout across window sizes.
+        stage = new Stage(new FitViewport(640, 360));
 
         Gdx.input.setInputProcessor(stage);
     }
@@ -57,7 +56,7 @@ public class MiniGameResultScreen implements Screen{
         TextField title = new TextField("Results:", gameInstance.skin);
         title.setAlignment(Align.center);
 
-        root.add(title).fillX();
+        root.add(title).expandX().fillX();
         
         int numPlayers = placements.length;
         for(int i = 0; i < numPlayers; i++){
@@ -70,7 +69,7 @@ public class MiniGameResultScreen implements Screen{
             String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
             TextField place = new TextField(resultText, gameInstance.skin);
             place.setAlignment(Align.center);
-            root.add(place);
+            root.add(place).expandX().fillX();
         }
         
         // Continue action depends on whether we are in the board flow or practice.
