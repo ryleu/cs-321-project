@@ -12,6 +12,7 @@ import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
+import com.roachstudios.critterparade.minigames.CatchObjectsMiniGame;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
 
@@ -37,13 +38,13 @@ public class CritterParade extends Game {
     public FitViewport viewport;
 
     private int numPlayers = 6;
-    
+
     /**
      * Shared player instances persisting across all screens. Initialized via
      * {@link #initializePlayers(int)} and accessed through {@link #getPlayers()}.
      */
     private Player[] players;
-    
+
     /**
      * Sprite texture paths for each player slot. Used during player initialization.
      */
@@ -55,7 +56,7 @@ public class CritterParade extends Game {
         "PlayerSprites/field_mouse.png",
         "PlayerSprites/solider_ant.png"
     };
-    
+
     /**
      * Display names for each critter, indexed by player slot.
      */
@@ -67,13 +68,13 @@ public class CritterParade extends Game {
         "Field Mouse",
         "Soldier Ant"
     };
-    
+
     /**
      * Textures for player sprites, kept alive for the game lifetime to avoid
      * reloading and to allow proper disposal.
      */
     private Texture[] playerTextures;
-    
+
     /**
      * High-level mode affects control flow between screens (e.g., where to go after
      * mini games). We keep it coarse-grained to simplify navigation decisions.
@@ -84,35 +85,35 @@ public class CritterParade extends Game {
         /** Practice mode for playing individual minigames. */
         PRACTICE_MODE
     }
-    
+
     /** Current game mode affecting navigation flow between screens. */
     public Mode mode;
 
     private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
     private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
-    
+
     /**
      * Current player's turn index (0-based). Persists across board recreations.
      */
     private int currentPlayerTurn = 0;
-    
+
     /**
      * Flag to advance to next player's turn when returning from minigame.
      */
     private boolean advanceTurnOnBoardReturn = false;
 
     private final boolean debugMode;
-    
+
     private SettingsManager settings;
     private SessionLogger sessionLogger;
-    
+
     /**
      * Creates the game with debug mode disabled.
      */
     public CritterParade() {
         this(false);
     }
-    
+
     /**
      * Creates the game with the specified debug mode.
      *
@@ -121,7 +122,7 @@ public class CritterParade extends Game {
     public CritterParade(boolean debugMode) {
         this.debugMode = debugMode;
     }
-    
+
     /**
      * Logs a message to the console.
      *
@@ -130,7 +131,7 @@ public class CritterParade extends Game {
     public void log(String message) {
         System.out.println("[CritterParade] " + message);
     }
-    
+
     /**
      * Logs a formatted message to the console.
      *
@@ -140,7 +141,7 @@ public class CritterParade extends Game {
     public void log(String format, Object... args) {
         System.out.println("[CritterParade] " + String.format(format, args));
     }
-    
+
     /**
      * Gets the session logger for tracking game events.
      *
@@ -149,7 +150,7 @@ public class CritterParade extends Game {
     public SessionLogger getSessionLogger() {
         return sessionLogger;
     }
-    
+
     /**
      * Sets the user's logging consent preference and initializes the session logger.
      *
@@ -160,11 +161,11 @@ public class CritterParade extends Game {
         settings.save();
         sessionLogger = new SessionLogger(enabled);
     }
-    
+
     // =========================================================================
     // Session Logging Helpers (null-safe wrappers)
     // =========================================================================
-    
+
     /**
      * Logs a mode selection event if logging is enabled.
      *
@@ -175,7 +176,7 @@ public class CritterParade extends Game {
             sessionLogger.logModeSelected(mode);
         }
     }
-    
+
     /**
      * Logs player initialization if logging is enabled.
      *
@@ -187,7 +188,7 @@ public class CritterParade extends Game {
             sessionLogger.logPlayersInitialized(count, names);
         }
     }
-    
+
     /**
      * Logs a minigame starting if logging is enabled.
      *
@@ -198,7 +199,7 @@ public class CritterParade extends Game {
             sessionLogger.logMinigameStart(minigameName);
         }
     }
-    
+
     /**
      * Logs minigame results if logging is enabled.
      *
@@ -211,7 +212,7 @@ public class CritterParade extends Game {
             sessionLogger.logMinigameEnd(minigameName, placements, crumbsAwarded);
         }
     }
-    
+
     /**
      * Logs a board game starting if logging is enabled.
      *
@@ -222,7 +223,7 @@ public class CritterParade extends Game {
             sessionLogger.logBoardStart(boardName);
         }
     }
-    
+
     /**
      * Logs a player turn if logging is enabled.
      *
@@ -234,7 +235,7 @@ public class CritterParade extends Game {
             sessionLogger.logPlayerTurn(playerName, diceRoll);
         }
     }
-    
+
     /**
      * Logs navigation to a screen if logging is enabled.
      *
@@ -266,10 +267,12 @@ public class CritterParade extends Game {
 
         // register mini games
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
+        registerMiniGame("Catching Stars", () -> new CatchObjectsMiniGame(this));
+
 
         // Load settings and check for first run
         settings = new SettingsManager();
-        
+
         if (settings.isFirstRun()) {
             // Show consent screen on first run
             log("First run detected, showing consent screen");
@@ -297,7 +300,7 @@ public class CritterParade extends Game {
         if (sessionLogger != null) {
             sessionLogger.saveSession();
         }
-        
+
         batch.dispose();
         font.dispose();
         disposePlayerTextures();
@@ -369,7 +372,7 @@ public class CritterParade extends Game {
     public void setNumPlayers(int newNumPlayers) {
         this.numPlayers = newNumPlayers;
     }
-    
+
     /**
      * Initializes or reinitializes shared player instances for the given count.
      * Call this when starting a new game session (after player selection).
@@ -380,20 +383,20 @@ public class CritterParade extends Game {
         if (count < 1 || count > 6) {
             throw new IllegalArgumentException("Player count must be between 1 and 6");
         }
-        
+
         // Dispose previous textures if they exist
         disposePlayerTextures();
-        
+
         this.numPlayers = count;
         this.players = new Player[count];
         this.playerTextures = new Texture[count];
-        
+
         for (int i = 0; i < count; i++) {
             playerTextures[i] = new Texture(PLAYER_SPRITE_PATHS[i]);
             players[i] = new Player(i + 1, CRITTER_NAMES[i], playerTextures[i]);
         }
     }
-    
+
     /**
      * Gets the array of active players.
      *
@@ -402,7 +405,7 @@ public class CritterParade extends Game {
     public Player[] getPlayers() {
         return players;
     }
-    
+
     /**
      * Gets a specific player by their ID (1-indexed).
      *
@@ -415,7 +418,7 @@ public class CritterParade extends Game {
         }
         return players[playerId - 1];
     }
-    
+
     /**
      * Checks if players have been initialized for the current session.
      *
@@ -424,7 +427,7 @@ public class CritterParade extends Game {
     public boolean hasPlayers() {
         return players != null && players.length > 0;
     }
-    
+
     /**
      * Resets all player scores (fruit, crumbs, wins) to zero.
      * Useful when starting a new game session.
@@ -435,7 +438,7 @@ public class CritterParade extends Game {
             p.resetScores();
         }
     }
-    
+
     /**
      * Disposes player textures to free GPU memory.
      */
@@ -449,7 +452,7 @@ public class CritterParade extends Game {
             playerTextures = null;
         }
     }
-    
+
     /**
      * Gets the current player turn index.
      *
@@ -458,7 +461,7 @@ public class CritterParade extends Game {
     public int getCurrentPlayerTurn() {
         return currentPlayerTurn;
     }
-    
+
     /**
      * Sets the current player turn index.
      * @param turn the turn index (0-based)
@@ -466,21 +469,21 @@ public class CritterParade extends Game {
     public void setCurrentPlayerTurn(int turn) {
         this.currentPlayerTurn = turn;
     }
-    
+
     /**
      * Advances to the next player's turn.
      */
     public void advancePlayerTurn() {
         currentPlayerTurn = (currentPlayerTurn + 1) % numPlayers;
     }
-    
+
     /**
      * Resets the turn to player 0.
      */
     public void resetPlayerTurn() {
         currentPlayerTurn = 0;
     }
-    
+
     /**
      * Resets all board game state for a new game.
      * Resets player turn, board positions, and scores.
@@ -496,7 +499,7 @@ public class CritterParade extends Game {
             }
         }
     }
-    
+
     /**
      * Checks if the turn should be advanced when returning to the board.
      *
@@ -505,7 +508,7 @@ public class CritterParade extends Game {
     public boolean shouldAdvanceTurnOnBoardReturn() {
         return advanceTurnOnBoardReturn;
     }
-    
+
     /**
      * Sets the flag to advance turn when returning to board.
      * @param advance true to advance turn on return

@@ -34,7 +34,7 @@ public class CatchObjectsMiniGame extends MiniGame {
     // intro UI
     private boolean showingIntro = true;
     private float introTimer = 0f;
-    private final float INTRO_DURATION = 3.5f; // give time to read instructions
+    private final float INTRO_DURATION = 3.5f;
 
     // character selection UI
     private boolean choosingCharacter = true;
@@ -60,22 +60,20 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     private Texture[] characterPreviewTextures;
 
-    // for blinking “press 1–6” text
     private float blinkTimer = 0f;
 
     public CatchObjectsMiniGame(CritterParade gameInstance) {
+        super(gameInstance);
         this.gameInstance = gameInstance;
 
         backgroundTex = new Texture("MiniGames/CatchObjects/night_sky.png");
         fallingObjectTex = new Texture("MiniGames/CatchObjects/star.png");
 
-        // load preview textures
         characterPreviewTextures = new Texture[CHARACTER_TEXTURE_PATHS.length];
         for (int i = 0; i < CHARACTER_TEXTURE_PATHS.length; i++) {
             characterPreviewTextures[i] = new Texture(CHARACTER_TEXTURE_PATHS[i]);
         }
 
-        // player count 1–6
         playerCount = gameInstance.getNumPlayers();
         if (playerCount < 1) playerCount = 1;
         if (playerCount > 6) playerCount = 6;
@@ -85,10 +83,15 @@ public class CatchObjectsMiniGame extends MiniGame {
         chosenCharacterIndex = new int[playerCount];
 
         for (int i = 0; i < playerCount; i++) {
-            chosenCharacterIndex[i] = -1; // not chosen yet
+            chosenCharacterIndex[i] = -1;
 
-            // temporary placeholder, will be overridden when they pick a character
-            players[i] = new Player(i + 1, new Texture("PlayerSprites/bumble_bee.png"));
+            // FIXED: Player now requires (id, name, texture)
+            players[i] = new Player(
+                i + 1,
+                "Bumble Bee", // placeholder name
+                new Texture("PlayerSprites/bumble_bee.png")
+            );
+
             players[i].setSpriteSize(1f);
             players[i].getSprite().setPosition(7f, 1f);
         }
@@ -99,26 +102,23 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     @Override
     public void show() {
-        // allow raw keyboard input (no Stage eating keys)
         Gdx.input.setInputProcessor(null);
     }
 
     @Override
     public void render(float delta) {
 
-        // --- INTRO SCREEN WITH INSTRUCTIONS ---
         if (showingIntro) {
             introTimer += delta;
             drawIntroScreen();
 
             if (introTimer >= INTRO_DURATION) {
                 showingIntro = false;
-                choosingCharacter = true; // first thing after intro is character select
+                choosingCharacter = true;
             }
             return;
         }
 
-        // --- CHARACTER SELECTION FOR CURRENT PLAYER ---
         if (choosingCharacter) {
             blinkTimer += delta;
             handleCharacterSelectionInput();
@@ -126,7 +126,6 @@ public class CatchObjectsMiniGame extends MiniGame {
             return;
         }
 
-        // --- TURN-END MESSAGE (“Player X got Y stars!”) ---
         if (showingTurnEnd) {
             turnEndTimer += delta;
             draw();
@@ -137,7 +136,6 @@ public class CatchObjectsMiniGame extends MiniGame {
             return;
         }
 
-        // --- NORMAL GAMEPLAY ---
         if (!gameOver) {
             input();
             logic(delta);
@@ -150,9 +148,9 @@ public class CatchObjectsMiniGame extends MiniGame {
         gameInstance.viewport.update(width, height, true);
     }
 
-    @Override public void pause() { }
-    @Override public void resume() { }
-    @Override public void hide() { }
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
 
     @Override
     public void dispose() {
@@ -164,10 +162,6 @@ public class CatchObjectsMiniGame extends MiniGame {
             }
         }
     }
-
-    // -------------------------------------------------------------------------
-    // INTRO DRAW – now includes instructions
-    // -------------------------------------------------------------------------
 
     private void drawIntroScreen() {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -182,82 +176,38 @@ public class CatchObjectsMiniGame extends MiniGame {
 
         gameInstance.batch.draw(backgroundTex, 0, 0, w, h);
 
-        // Title
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Welcome to Catching Stars!",
-            w * 0.20f,
-            h * 0.80f
-        );
+        gameInstance.font.draw(gameInstance.batch, "Welcome to Catching Stars!", w * 0.20f, h * 0.80f);
+        gameInstance.font.draw(gameInstance.batch, "May the best player win!", w * 0.23f, h * 0.70f);
 
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "May the best player win!",
-            w * 0.23f,
-            h * 0.70f
-        );
+        gameInstance.font.draw(gameInstance.batch, "Controls:", w * 0.10f, h * 0.55f);
+        gameInstance.font.draw(gameInstance.batch, "Move Left: A or LEFT ARROW", w * 0.10f, h * 0.47f);
+        gameInstance.font.draw(gameInstance.batch, "Move Right: D or RIGHT ARROW", w * 0.10f, h * 0.40f);
 
-        // Controls
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Controls:",
-            w * 0.10f,
-            h * 0.55f
-        );
-
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Move Left: A or LEFT ARROW",
-            w * 0.10f,
-            h * 0.47f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Move Right: D or RIGHT ARROW",
-            w * 0.10f,
-            h * 0.40f
-        );
-
-        // Rules
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Catch falling stars to score points.",
-            w * 0.10f,
-            h * 0.30f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Missing ONE star ends your turn.",
-            w * 0.10f,
-            h * 0.23f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "You can catch up to 10 stars in a turn.",
-            w * 0.10f,
-            h * 0.16f
-        );
+        gameInstance.font.draw(gameInstance.batch,
+            "Catch falling stars to score points.", w * 0.10f, h * 0.30f);
+        gameInstance.font.draw(gameInstance.batch,
+            "Missing ONE star ends your turn.", w * 0.10f, h * 0.23f);
+        gameInstance.font.draw(gameInstance.batch,
+            "You can catch up to 10 stars in a turn.", w * 0.10f, h * 0.16f);
 
         gameInstance.batch.end();
     }
 
-    // -------------------------------------------------------------------------
-    // CHARACTER SELECT
-    // -------------------------------------------------------------------------
-
     private void handleCharacterSelectionInput() {
-        // Keyboard selection: keys 1–6
         for (int i = 0; i < CHARACTER_TEXTURE_PATHS.length; i++) {
-            int keyCode = Input.Keys.NUM_1 + i; // 1,2,3,4,5,6
+
+            int keyCode = Input.Keys.NUM_1 + i;
 
             if (Gdx.input.isKeyJustPressed(keyCode)) {
                 chosenCharacterIndex[currentPlayerIndex] = i;
 
-                // Build player with chosen texture
+                // FIXED: Pass name + texture
                 players[currentPlayerIndex] = new Player(
                     currentPlayerIndex + 1,
+                    CHARACTER_NAMES[i],
                     new Texture(CHARACTER_TEXTURE_PATHS[i])
                 );
+
                 players[currentPlayerIndex].setSpriteSize(1f);
                 players[currentPlayerIndex].getSprite().setPosition(7f, 1f);
 
@@ -279,30 +229,19 @@ public class CatchObjectsMiniGame extends MiniGame {
 
         gameInstance.batch.begin();
 
-        // background
         gameInstance.batch.draw(backgroundTex, 0, 0, w, h);
 
-        // title
-        gameInstance.font.draw(
-            gameInstance.batch,
+        gameInstance.font.draw(gameInstance.batch,
             "Player " + (currentPlayerIndex + 1) + " - Select Your Character",
-            w * 0.10f,
-            h * 0.90f
-        );
+            w * 0.10f, h * 0.90f);
 
-        // Blinking hint text
         float alpha = 0.5f + 0.5f * MathUtils.sin(blinkTimer * 4f);
         gameInstance.font.setColor(1f, 1f, 1f, alpha);
-        gameInstance.font.draw(
-            gameInstance.batch,
+        gameInstance.font.draw(gameInstance.batch,
             "Press the NUMBER KEY (1–6) for your character",
-            w * 0.10f,
-            h * 0.82f
-        );
-        // reset color to normal opaque white
+            w * 0.10f, h * 0.82f);
         gameInstance.font.setColor(1f, 1f, 1f, 1f);
 
-        // Draw character options in a row with numbered labels
         float slotWidth = w / CHARACTER_TEXTURE_PATHS.length;
         float spriteSize = 1.5f;
 
@@ -311,44 +250,21 @@ public class CatchObjectsMiniGame extends MiniGame {
             float spriteX = centerX - spriteSize * 0.5f;
             float spriteY = h * 0.45f;
 
-            // character preview image
-            gameInstance.batch.draw(
-                characterPreviewTextures[i],
-                spriteX,
-                spriteY,
-                spriteSize,
-                spriteSize
-            );
+            gameInstance.batch.draw(characterPreviewTextures[i], spriteX, spriteY, spriteSize, spriteSize);
 
-            // numeric label directly above sprite
-            gameInstance.font.draw(
-                gameInstance.batch,
-                (i + 1) + "",
-                centerX - 0.2f,
-                h * 0.60f
-            );
+            gameInstance.font.draw(gameInstance.batch,
+                (i + 1) + "", centerX - 0.2f, h * 0.60f);
 
-            // text label under sprite
-            String label = CHARACTER_NAMES[i];
-            gameInstance.font.draw(
-                gameInstance.batch,
-                label,
-                centerX - 1.3f,
-                h * 0.35f
-            );
+            gameInstance.font.draw(gameInstance.batch,
+                CHARACTER_NAMES[i], centerX - 1.3f, h * 0.35f);
         }
 
         gameInstance.batch.end();
     }
 
-    // -------------------------------------------------------------------------
-    // INPUT DURING GAMEPLAY – movement slowed down
-    // -------------------------------------------------------------------------
-
     private void input() {
         Player p = players[currentPlayerIndex];
 
-        // slower movement so it’s more controllable
         float step = 0.12f;
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
@@ -362,10 +278,6 @@ public class CatchObjectsMiniGame extends MiniGame {
         float pw = p.getSprite().getWidth();
         p.getSprite().setX(MathUtils.clamp(p.getSprite().getX(), 0f, w - pw));
     }
-
-    // -------------------------------------------------------------------------
-    // GAME LOGIC
-    // -------------------------------------------------------------------------
 
     private void logic(float delta) {
         fallingY -= fallingSpeed * delta;
@@ -383,25 +295,17 @@ public class CatchObjectsMiniGame extends MiniGame {
             scores[currentPlayerIndex]++;
             resetFallingStar();
 
-            if (scores[currentPlayerIndex] >= 10) {
-                startTurnEnd();
-            }
+            if (scores[currentPlayerIndex] >= 10) startTurnEnd();
             return;
         }
 
-        if (fallingY < -1f) {
-            startTurnEnd();
-        }
+        if (fallingY < -1f) startTurnEnd();
     }
 
     private void startTurnEnd() {
         showingTurnEnd = true;
         turnEndTimer = 0f;
     }
-
-    // -------------------------------------------------------------------------
-    // DRAW DURING GAMEPLAY
-    // -------------------------------------------------------------------------
 
     private void draw() {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -420,29 +324,19 @@ public class CatchObjectsMiniGame extends MiniGame {
         players[currentPlayerIndex].getSprite().draw(gameInstance.batch);
 
         if (!showingTurnEnd) {
-            gameInstance.font.draw(
-                gameInstance.batch,
+            gameInstance.font.draw(gameInstance.batch,
                 "Player " + (currentPlayerIndex + 1) +
                     " Score: " + scores[currentPlayerIndex],
-                1f,
-                h - 1f
-            );
+                1f, h - 1f);
         } else {
-            gameInstance.font.draw(
-                gameInstance.batch,
+            gameInstance.font.draw(gameInstance.batch,
                 "Player " + (currentPlayerIndex + 1) +
                     " got " + scores[currentPlayerIndex] + " stars!",
-                w * 0.25f,
-                h * 0.55f
-            );
+                w * 0.25f, h * 0.55f);
         }
 
         gameInstance.batch.end();
     }
-
-    // -------------------------------------------------------------------------
-    // STAR RESET
-    // -------------------------------------------------------------------------
 
     private void resetFallingStar() {
         float w = gameInstance.viewport.getWorldWidth();
@@ -453,10 +347,6 @@ public class CatchObjectsMiniGame extends MiniGame {
         fallingSpeed = MathUtils.random(3f, 6f);
     }
 
-    // -------------------------------------------------------------------------
-    // TURN HANDLING
-    // -------------------------------------------------------------------------
-
     private void endTurn() {
         currentPlayerIndex++;
 
@@ -466,13 +356,8 @@ public class CatchObjectsMiniGame extends MiniGame {
             return;
         }
 
-        // next player: go back to character select for them
         choosingCharacter = true;
     }
-
-    // -------------------------------------------------------------------------
-    // WINNER SORTING (NO NULLS)
-    // -------------------------------------------------------------------------
 
     private Player[] makePlacementArray() {
         Player[] ordered = new Player[playerCount];
@@ -482,12 +367,9 @@ public class CatchObjectsMiniGame extends MiniGame {
             idx[i] = i;
         }
 
-        java.util.Arrays.sort(idx, new java.util.Comparator<Integer>() {
-            @Override
-            public int compare(Integer a, Integer b) {
-                return Integer.compare(scores[b], scores[a]);
-            }
-        });
+        java.util.Arrays.sort(idx, (a, b) ->
+            Integer.compare(scores[b], scores[a])
+        );
 
         for (int i = 0; i < playerCount; i++) {
             ordered[i] = players[idx[i]];
@@ -495,4 +377,15 @@ public class CatchObjectsMiniGame extends MiniGame {
 
         return ordered;
     }
+
+    @Override
+    public String getName() {
+        return "Catching Stars";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Move left/right to catch stars. Missing one ends your turn.";
+    }
 }
+
