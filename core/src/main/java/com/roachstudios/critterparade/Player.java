@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Rectangle;
 /**
  * Represents a player profile and input source. Tracks basic board resources
  * and exposes helper methods for reading input mapped by {@code playerID}.
@@ -22,6 +23,7 @@ public class Player {
     private String name;
     private Texture playerTex;
     private Sprite playerSprite;
+    private Rectangle bounds;
     
     // Board game state
     private int boardTileIndex = 0;
@@ -46,6 +48,9 @@ public class Player {
         this.playerTex = tex;
         this.playerSprite = new Sprite(playerTex);
         this.playerSprite.setSize(1, 1);
+        this.bounds = new Rectangle(this.playerSprite.getX(), this.playerSprite.getY(), 1, 1);
+        
+        
         
     }
     
@@ -655,5 +660,14 @@ public class Player {
                 
         }
         return false;
+    }
+    
+    /**
+     * Gets the bounds rectangle.
+     *
+     * @return the bounds rectangle.
+     */
+    public Rectangle getBounds(){
+        return this.bounds;
     }
 }
