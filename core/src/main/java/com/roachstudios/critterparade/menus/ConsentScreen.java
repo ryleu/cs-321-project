@@ -40,7 +40,7 @@ public class ConsentScreen implements Screen {
         stage.addActor(root);
         
         // Title
-        Label titleLabel = new Label("Session Logging", game.skin);
+        Label titleLabel = new Label("Session Logging", game.getSkin());
         root.add(titleLabel).padBottom(20).row();
         
         // Description
@@ -56,7 +56,7 @@ public class ConsentScreen implements Screen {
             "No data is sent over the internet.\n" +
             "You can change this setting later in the settings file.";
         
-        Label descLabel = new Label(description, game.skin);
+        Label descLabel = new Label(description, game.getSkin());
         descLabel.setWrap(true);
         descLabel.setAlignment(Align.center);
         root.add(descLabel).width(500).padBottom(40).row();
@@ -64,7 +64,7 @@ public class ConsentScreen implements Screen {
         // Buttons
         Table buttonTable = new Table();
         
-        TextButton enableButton = new TextButton("Enable Logging", game.skin);
+        TextButton enableButton = new TextButton("Enable Logging", game.getSkin());
         enableButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -74,7 +74,7 @@ public class ConsentScreen implements Screen {
             }
         });
         
-        TextButton disableButton = new TextButton("Disable Logging", game.skin);
+        TextButton disableButton = new TextButton("Disable Logging", game.getSkin());
         disableButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {

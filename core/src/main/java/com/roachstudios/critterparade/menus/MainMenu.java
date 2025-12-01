@@ -37,10 +37,10 @@ public class MainMenu implements Screen {
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override
     /**
      * Composes the menu UI using a columnar {@link Table} layout.
      */
+    @Override
     public void show() {
         // Start playing intro music (managed by CritterParade)
         gameInstance.startIntroMusic();
@@ -55,11 +55,11 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton play = new TextButton("Play", gameInstance.skin);
+        TextButton play = new TextButton("Play", gameInstance.getSkin());
         play.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                gameInstance.mode = CritterParade.Mode.BOARD_MODE;
+                gameInstance.setMode(CritterParade.Mode.BOARD_MODE);
                 gameInstance.log("Mode selected: BOARD_MODE");
                 gameInstance.logModeSelected(CritterParade.Mode.BOARD_MODE);
                 gameInstance.setScreen(new BoardSelectMenu(gameInstance));
@@ -69,11 +69,11 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton miniGames = new TextButton("Mini Games", gameInstance.skin);
+        TextButton miniGames = new TextButton("Mini Games", gameInstance.getSkin());
         miniGames.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                gameInstance.mode = CritterParade.Mode.PRACTICE_MODE;
+                gameInstance.setMode(CritterParade.Mode.PRACTICE_MODE);
                 gameInstance.log("Mode selected: PRACTICE_MODE");
                 gameInstance.logModeSelected(CritterParade.Mode.PRACTICE_MODE);
                 gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
@@ -83,11 +83,11 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton rushMode = new TextButton("Minigame Rush", gameInstance.skin);
+        TextButton rushMode = new TextButton("Minigame Rush", gameInstance.getSkin());
         rushMode.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                gameInstance.mode = CritterParade.Mode.RUSH_MODE;
+                gameInstance.setMode(CritterParade.Mode.RUSH_MODE);
                 gameInstance.log("Mode selected: RUSH_MODE");
                 gameInstance.logModeSelected(CritterParade.Mode.RUSH_MODE);
                 // Go to player select, then start the rush
@@ -98,7 +98,7 @@ public class MainMenu implements Screen {
                     MiniGameRushController rushController = new MiniGameRushController(gameInstance);
                     gameInstance.setRushController(rushController);
                     // Return the instruction screen for the first minigame
-                    return new MiniGameInstructionScreen(gameInstance, rushController.getCurrentMinigame().supplier());
+                    return new MiniGameInstructionScreen(gameInstance, rushController.getCurrentMinigame());
                 }));
             }
         });
@@ -106,7 +106,7 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton howToPlay = new TextButton("How To Play", gameInstance.skin);
+        TextButton howToPlay = new TextButton("How To Play", gameInstance.getSkin());
         howToPlay.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -117,7 +117,7 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton leaderboard = new TextButton("Leaderboard", gameInstance.skin);
+        TextButton leaderboard = new TextButton("Leaderboard", gameInstance.getSkin());
         leaderboard.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -128,7 +128,7 @@ public class MainMenu implements Screen {
 
         root.row();
 
-        TextButton exit = new TextButton("Exit", gameInstance.skin);
+        TextButton exit = new TextButton("Exit", gameInstance.getSkin());
         exit.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -140,10 +140,12 @@ public class MainMenu implements Screen {
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
-    @Override
     /**
      * Clears the screen and renders the stage.
+     *
+     * @param v time delta since last frame
      */
+    @Override
     public void render(float v) {
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -153,10 +155,13 @@ public class MainMenu implements Screen {
         stage.draw();
     }
 
-    @Override
     /**
      * Updates the viewport and centers the camera.
+     *
+     * @param i new window width
+     * @param i1 new window height
      */
+    @Override
     public void resize(int i, int i1) {
         stage.getViewport().update(i, i1, true);
     }

@@ -75,6 +75,11 @@ public class CatchObjectsMiniGame extends MiniGame {
     
     private boolean gameCompleted = false;
 
+    /**
+     * Constructs a new Catching Stars mini game.
+     *
+     * @param game shared game instance providing viewport, batch, and players
+     */
     public CatchObjectsMiniGame(CritterParade game) {
         super(game);
         
@@ -97,14 +102,14 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     @Override
     public void show() {
-        game.viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         
         // Reset game state
         gameTimer = 0f;
         gameCompleted = false;
         
         int playerCount = getPlayerCount();
-        float worldWidth = game.viewport.getWorldWidth();
+        float worldWidth = game.getViewport().getWorldWidth();
         
         // Set up player positions spread across the bottom
         Player[] players = getPlayers();
@@ -147,8 +152,8 @@ public class CatchObjectsMiniGame extends MiniGame {
         float speed = 5f;
         float delta = Gdx.graphics.getDeltaTime();
         
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
         
         Player[] players = getPlayers();
         for (Player player : players) {
@@ -210,16 +215,16 @@ public class CatchObjectsMiniGame extends MiniGame {
     private void draw() {
         ScreenUtils.clear(0, 0, 0, 1);
 
-        game.viewport.apply();
-        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+        game.getViewport().apply();
+        game.getBatch().setProjectionMatrix(game.getViewport().getCamera().combined);
 
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
 
-        game.batch.begin();
+        game.getBatch().begin();
 
         // Draw background
-        game.batch.draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        game.getBatch().draw(backgroundTex, 0, 0, worldWidth, worldHeight);
         
         Player[] players = getPlayers();
         int playerCount = players.length;
@@ -231,50 +236,50 @@ public class CatchObjectsMiniGame extends MiniGame {
             float y = fallingY[i];
             
             // Draw black outline (slightly larger star behind)
-            game.batch.setColor(Color.BLACK);
-            game.batch.draw(fallingObjectTex, 
+            game.getBatch().setColor(Color.BLACK);
+            game.getBatch().draw(fallingObjectTex, 
                 x - outlineSize, y - outlineSize, 
                 starSize + outlineSize * 2, starSize + outlineSize * 2);
             
             // Draw colored star on top
             Color starColor = getPlayerColor(i);
-            game.batch.setColor(starColor);
-            game.batch.draw(fallingObjectTex, x, y, starSize, starSize);
+            game.getBatch().setColor(starColor);
+            game.getBatch().draw(fallingObjectTex, x, y, starSize, starSize);
         }
         
         // Reset color for player sprites
-        game.batch.setColor(Color.WHITE);
+        game.getBatch().setColor(Color.WHITE);
         
         // Draw all player sprites
         for (Player player : players) {
-            player.getSprite().draw(game.batch);
+            player.getSprite().draw(game.getBatch());
         }
         
         // Scale font for 16x9 viewport (font is sized for 640x360 menu viewport)
-        game.font.getData().setScale(16f / 640f);
+        game.getFont().getData().setScale(16f / 640f);
         
         // Draw color-coded score labels at the top
         float labelSpacing = worldWidth / (playerCount + 1);
         for (int i = 0; i < playerCount; i++) {
             Color playerColor = getPlayerColor(i);
-            game.font.setColor(playerColor);
+            game.getFont().setColor(playerColor);
             
             String scoreText = "P" + (i + 1) + ": " + scores[i];
             float labelX = labelSpacing * (i + 1) - 0.5f;
-            game.font.draw(game.batch, scoreText, labelX, worldHeight - 0.3f);
+            game.getFont().draw(game.getBatch(), scoreText, labelX, worldHeight - 0.3f);
         }
         
         // Reset font color and draw timer
-        game.font.setColor(Color.WHITE);
+        game.getFont().setColor(Color.WHITE);
         int timeLeft = (int) Math.ceil(GAME_DURATION - gameTimer);
-        game.font.draw(
-            game.batch,
+        game.getFont().draw(
+            game.getBatch(),
             "Time: " + timeLeft,
             worldWidth / 2f - 0.5f,
             worldHeight - 0.8f
         );
 
-        game.batch.end();
+        game.getBatch().end();
     }
 
     /**
@@ -291,8 +296,8 @@ public class CatchObjectsMiniGame extends MiniGame {
      * Resets a falling star to a random position at the top of the screen.
      */
     private void resetFallingStar(int playerIndex) {
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
         
         fallingX[playerIndex] = MathUtils.random(0f, worldWidth - starSize);
         fallingY[playerIndex] = worldHeight + MathUtils.random(0f, 2f); // Stagger spawns
@@ -333,7 +338,7 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     @Override
     public void resize(int width, int height) {
-        game.viewport.update(width, height, true);
+        game.getViewport().update(width, height, true);
     }
 
     @Override

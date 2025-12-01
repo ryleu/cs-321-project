@@ -110,7 +110,7 @@ public class SimpleRacerMiniGame extends MiniGame {
     @Override
     public void show() {
         // Update viewport to current screen size
-        game.viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         
         // Reset game state in case we're replaying
         finishedCount = 0;
@@ -161,7 +161,7 @@ public class SimpleRacerMiniGame extends MiniGame {
      * player crosses the line at x=14 in world units.
      */
     private void logic() {
-        float worldWidth = game.viewport.getWorldWidth();
+        float worldWidth = game.getViewport().getWorldWidth();
         float delta = Gdx.graphics.getDeltaTime();
         
         // Update game timer
@@ -201,24 +201,24 @@ public class SimpleRacerMiniGame extends MiniGame {
      */
     private void draw() {
         ScreenUtils.clear(1f, 0.992f, 0.816f, 1f);
-        game.viewport.apply();
-        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        game.batch.begin();
+        game.getViewport().apply();
+        game.getBatch().setProjectionMatrix(game.getViewport().getCamera().combined);
+        game.getBatch().begin();
         
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
         
-        game.batch.draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        game.getBatch().draw(backgroundTex, 0, 0, worldWidth, worldHeight);
         // Finish line at x=14 to leave 2 world units of run-up in a 16x9 world.
-        game.batch.draw(finishLineTex, 14f, 0, 1, worldHeight);
+        game.getBatch().draw(finishLineTex, 14f, 0, 1, worldHeight);
         
         // Draw all player sprites
         Player[] players = getPlayers();
         for (Player player : players) {
-            player.getSprite().draw(game.batch);
+            player.getSprite().draw(game.getBatch());
         }
         
-        game.batch.end();
+        game.getBatch().end();
     }
     
     /**

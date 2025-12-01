@@ -44,7 +44,7 @@ public class VictoryScreen implements Screen {
         root.setFillParent(true);
 
         // Congratulations title
-        Label title = new Label("Congratulations!", gameInstance.skin);
+        Label title = new Label("Congratulations!", gameInstance.getSkin());
         title.setAlignment(Align.center);
         root.add(title).expandX().fillX();
 
@@ -52,7 +52,7 @@ public class VictoryScreen implements Screen {
 
         // Winner announcement
         String winnerText = winner != null ? winner.getName() + " wins!" : "Game Over!";
-        Label winnerLabel = new Label(winnerText, gameInstance.skin);
+        Label winnerLabel = new Label(winnerText, gameInstance.getSkin());
         winnerLabel.setAlignment(Align.center);
         root.add(winnerLabel).expandX().fillX().padTop(20);
 
@@ -62,7 +62,7 @@ public class VictoryScreen implements Screen {
         if (winner != null) {
             Label statsLabel = new Label(
                 "Fruits: " + winner.getFruit() + " | Crumbs: " + winner.getCrumbs() + " | Wins: " + winner.getWins(),
-                gameInstance.skin
+                gameInstance.getSkin()
             );
             statsLabel.setAlignment(Align.center);
             root.add(statsLabel).expandX().fillX().padTop(10);
@@ -70,7 +70,7 @@ public class VictoryScreen implements Screen {
         }
 
         // Return to main menu button
-        TextButton menuButton = new TextButton("Return to Main Menu", gameInstance.skin);
+        TextButton menuButton = new TextButton("Return to Main Menu", gameInstance.getSkin());
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {

@@ -11,6 +11,7 @@ import com.roachstudios.critterparade.gameboards.KitchenHavocBoard;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
+import com.roachstudios.critterparade.minigames.MiniGameDescriptor;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
@@ -31,13 +32,13 @@ import java.util.function.Supplier;
  */
 public class CritterParade extends Game {
     /** Shared sprite batch used for rendering across all screens. */
-    public SpriteBatch batch;
+    private SpriteBatch batch;
     /** Shared bitmap font used for text rendering across all screens. */
-    public BitmapFont font;
+    private BitmapFont font;
     /** Shared UI skin used for scene2d widgets across all screens. */
-    public CritterParadeSkin skin;
+    private CritterParadeSkin skin;
     /** Shared viewport used for consistent UI scaling across screen sizes. */
-    public FitViewport viewport;
+    private FitViewport viewport;
 
     private int numPlayers = 6;
     
@@ -91,9 +92,9 @@ public class CritterParade extends Game {
     }
     
     /** Current game mode affecting navigation flow between screens. */
-    public Mode mode;
+    private Mode mode;
 
-    private final ArrayList<NamedSupplier<MiniGame>> minigameRegistry = new ArrayList<>();
+    private final ArrayList<MiniGameDescriptor> minigameRegistry = new ArrayList<>();
     private final ArrayList<NamedSupplier<GameBoard>> gameBoardRegistry = new ArrayList<>();
     
     /**
@@ -377,10 +378,13 @@ public class CritterParade extends Game {
         registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
         registerGameBoard(KitchenHavocBoard.NAME, () -> new KitchenHavocBoard(this));
 
-        // register mini games
-        registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
-        registerMiniGame(DodgeBallMiniGame.NAME, () -> new DodgeBallMiniGame(this));
-        registerMiniGame(CatchObjectsMiniGame.NAME, () -> new CatchObjectsMiniGame(this));
+        // register mini games with their metadata
+        registerMiniGame(SimpleRacerMiniGame.NAME, SimpleRacerMiniGame.INSTRUCTIONS, 
+            () -> new SimpleRacerMiniGame(this));
+        registerMiniGame(DodgeBallMiniGame.NAME, DodgeBallMiniGame.INSTRUCTIONS, 
+            () -> new DodgeBallMiniGame(this));
+        registerMiniGame(CatchObjectsMiniGame.NAME, CatchObjectsMiniGame.INSTRUCTIONS, 
+            () -> new CatchObjectsMiniGame(this));
 
         // Initialize music player
         musicPlayer = new MusicPlayer(this);
@@ -462,23 +466,79 @@ public class CritterParade extends Game {
     }
 
     /**
-     * Registers a lazy supplier for a mini game with a display name.
-     * Suppliers are used so screens can create fresh instances on demand
-     * instead of reusing stateful objects.
+     * Gets the shared sprite batch used for rendering.
+     *
+     * @return the shared SpriteBatch instance
+     */
+    public SpriteBatch getBatch() {
+        return batch;
+    }
+
+    /**
+     * Gets the shared bitmap font used for text rendering.
+     *
+     * @return the shared BitmapFont instance
+     */
+    public BitmapFont getFont() {
+        return font;
+    }
+
+    /**
+     * Gets the shared UI skin used for scene2d widgets.
+     *
+     * @return the shared CritterParadeSkin instance
+     */
+    public CritterParadeSkin getSkin() {
+        return skin;
+    }
+
+    /**
+     * Gets the shared viewport used for consistent UI scaling.
+     *
+     * @return the shared FitViewport instance
+     */
+    public FitViewport getViewport() {
+        return viewport;
+    }
+
+    /**
+     * Gets the current game mode.
+     *
+     * @return the current game mode
+     */
+    public Mode getMode() {
+        return mode;
+    }
+
+    /**
+     * Sets the current game mode.
+     *
+     * @param mode the new game mode
+     */
+    public void setMode(Mode mode) {
+        this.mode = mode;
+    }
+
+    /**
+     * Registers a mini game with its metadata and factory.
+     * 
+     * <p>Using a descriptor pattern separates static metadata (name, instructions)
+     * from runtime instances, avoiding unnecessary object creation.</p>
      *
      * @param name display name for the mini game
+     * @param instructions how-to-play instructions shown before the game
      * @param miniGameSupplier supplier that creates a new mini game instance
      */
-    public void registerMiniGame(String name, Supplier<MiniGame> miniGameSupplier) {
-        minigameRegistry.add(new NamedSupplier<>(name, miniGameSupplier));
+    public void registerMiniGame(String name, String instructions, Supplier<MiniGame> miniGameSupplier) {
+        minigameRegistry.add(new MiniGameDescriptor(name, instructions, miniGameSupplier));
     }
 
     /**
      * Gets all registered mini games.
      *
-     * @return immutable view of all registered mini games with their names
+     * @return immutable view of all registered mini game descriptors
      */
-    public List<NamedSupplier<MiniGame>> getMiniGames() {
+    public List<MiniGameDescriptor> getMiniGames() {
         return Collections.unmodifiableList(minigameRegistry);
     }
 

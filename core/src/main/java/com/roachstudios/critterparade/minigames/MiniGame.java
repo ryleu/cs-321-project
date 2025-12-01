@@ -410,7 +410,7 @@ public abstract class MiniGame implements Screen {
     
     @Override
     public void resize(int width, int height) {
-        game.viewport.update(width, height, true);
+        game.getViewport().update(width, height, true);
     }
     
     @Override

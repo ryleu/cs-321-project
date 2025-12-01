@@ -46,7 +46,7 @@ public class RushVictoryScreen implements Screen {
         root.pad(20);
 
         // Title
-        Label title = new Label("Minigame Rush Complete!", gameInstance.skin);
+        Label title = new Label("Minigame Rush Complete!", gameInstance.getSkin());
         title.setFontScale(1.5f);
         title.setAlignment(Align.center);
         title.setColor(Color.GOLD);
@@ -70,7 +70,7 @@ public class RushVictoryScreen implements Screen {
             winnerText = "No winner!";
         }
         
-        Label winnerLabel = new Label(winnerText, gameInstance.skin);
+        Label winnerLabel = new Label(winnerText, gameInstance.getSkin());
         winnerLabel.setAlignment(Align.center);
         winnerLabel.setColor(Color.GREEN);
         winnerLabel.setWrap(true);
@@ -78,7 +78,7 @@ public class RushVictoryScreen implements Screen {
         root.row();
 
         // Divider
-        Label divider = new Label("─────────── Final Standings ───────────", gameInstance.skin);
+        Label divider = new Label("─────────── Final Standings ───────────", gameInstance.getSkin());
         divider.setColor(Color.GRAY);
         divider.setAlignment(Align.center);
         root.add(divider).fillX().padBottom(10);
@@ -100,7 +100,7 @@ public class RushVictoryScreen implements Screen {
             String standingText = placeEmoji + " " + player.getName() + 
                     " - " + player.getCrumbs() + " crumbs (" + player.getWins() + " wins)";
             
-            Label standingLabel = new Label(standingText, gameInstance.skin);
+            Label standingLabel = new Label(standingText, gameInstance.getSkin());
             standingLabel.setAlignment(Align.center);
             
             // Color code top 3
@@ -117,7 +117,7 @@ public class RushVictoryScreen implements Screen {
         }
 
         // Return to main menu button
-        TextButton menuButton = new TextButton("Return to Main Menu", gameInstance.skin);
+        TextButton menuButton = new TextButton("Return to Main Menu", gameInstance.getSkin());
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {

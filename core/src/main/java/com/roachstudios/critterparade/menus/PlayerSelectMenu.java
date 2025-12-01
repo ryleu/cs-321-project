@@ -39,23 +39,23 @@ public class PlayerSelectMenu implements Screen {
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override
     /**
      * Builds simple buttons for choosing a player count between 2 and 6.
      */
+    @Override
     public void show() {
         Table root = new Table();
         stage.addActor(root);
         root.setFillParent(true);
 
-        Label title = new Label("Select Number of Players", gameInstance.skin);
+        Label title = new Label("Select Number of Players", gameInstance.getSkin());
         title.setAlignment(Align.center);
 
         root.add(title).expandX().fillX().padBottom(20);
 
         for (int i = 2; i <= 6; i++) {
             root.row();
-            TextButton changeButton = new TextButton("%d Players".formatted(i), gameInstance.skin);
+            TextButton changeButton = new TextButton("%d Players".formatted(i), gameInstance.getSkin());
             int finalI = i;
             changeButton.addListener(new ChangeListener() {
                 @Override
@@ -83,10 +83,12 @@ public class PlayerSelectMenu implements Screen {
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
-    @Override
     /**
      * Clears the screen and renders the stage.
+     *
+     * @param delta time since last frame
      */
+    @Override
     public void render(float delta) {
         // Clear each frame; scene2d does not clear automatically.
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
@@ -96,10 +98,13 @@ public class PlayerSelectMenu implements Screen {
         stage.draw();
     }
 
-    @Override
     /**
      * Updates the viewport and centers the camera.
+     *
+     * @param width new window width
+     * @param height new window height
      */
+    @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }

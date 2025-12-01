@@ -53,16 +53,16 @@ public class HowToPlayMenu implements Screen {
         squirrelTexture = new Texture("HowToPlay/Controls/squirrel.png");
     }
 
-    @Override
     /**
      * Builds a scrollable grid of control images with labels.
      */
+    @Override
     public void show() {
         Table root = new Table();
         root.setFillParent(true);
         stage.addActor(root);
 
-        Label title = new Label("How To Play", gameInstance.skin);
+        Label title = new Label("How To Play", gameInstance.getSkin());
         title.setAlignment(Align.center);
         root.add(title).fillX().padBottom(15);
 
@@ -79,14 +79,14 @@ public class HowToPlayMenu implements Screen {
         addControlCell(controlsGrid, "Mouse", mouseTexture);
         addControlCell(controlsGrid, "Squirrel", squirrelTexture);
 
-        ScrollPane scrollPane = new ScrollPane(controlsGrid, gameInstance.skin);
+        ScrollPane scrollPane = new ScrollPane(controlsGrid, gameInstance.getSkin());
         scrollPane.setScrollingDisabled(true, false);
 
         root.add(scrollPane).expand().fill().minHeight(200f);
 
         root.row();
 
-        TextButton backButton = new TextButton("Back", gameInstance.skin);
+        TextButton backButton = new TextButton("Back", gameInstance.getSkin());
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -98,10 +98,12 @@ public class HowToPlayMenu implements Screen {
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
-    @Override
     /**
      * Clears the screen and renders the stage.
+     *
+     * @param delta time since last frame
      */
+    @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -110,10 +112,13 @@ public class HowToPlayMenu implements Screen {
         stage.draw();
     }
 
-    @Override
     /**
      * Updates the viewport and centers the camera.
+     *
+     * @param width new window width
+     * @param height new window height
      */
+    @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
@@ -145,7 +150,7 @@ public class HowToPlayMenu implements Screen {
 
     private void addControlCell(Table grid, String labelText, Texture texture) {
         Table cell = new Table();
-        Label label = new Label(labelText, gameInstance.skin);
+        Label label = new Label(labelText, gameInstance.getSkin());
         label.setAlignment(Align.center);
         cell.add(label).center().padBottom(2f);
         cell.row();
