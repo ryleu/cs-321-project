@@ -314,6 +314,7 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     /**
      * Creates the placement array sorted by score (highest first).
+     * Uses player index as a tiebreaker for stable ordering when scores are equal.
      */
     private Player[] makePlacementArray() {
         int playerCount = getPlayerCount();
@@ -326,8 +327,15 @@ public class CatchObjectsMiniGame extends MiniGame {
             idx[i] = i;
         }
 
-        // Sort by score descending
-        java.util.Arrays.sort(idx, (a, b) -> Integer.compare(scores[b], scores[a]));
+        // Sort by score descending, with player index as tiebreaker for stability
+        java.util.Arrays.sort(idx, (a, b) -> {
+            int scoreCompare = Integer.compare(scores[b], scores[a]);
+            if (scoreCompare != 0) {
+                return scoreCompare;
+            }
+            // Tiebreaker: lower player index first for stable ordering
+            return Integer.compare(a, b);
+        });
 
         for (int i = 0; i < playerCount; i++) {
             ordered[i] = players[idx[i]];

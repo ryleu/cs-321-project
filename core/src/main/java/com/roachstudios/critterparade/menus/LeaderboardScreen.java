@@ -50,6 +50,11 @@ public class LeaderboardScreen implements Screen {
     
     @Override
     public void show() {
+        // Update viewport to current screen size to ensure proper scaling
+        stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (minigames may have changed it for their world-unit viewports)
+        gameInstance.getFont().getData().setScale(1.0f);
+        
         buildUI();
     }
     
@@ -74,11 +79,19 @@ public class LeaderboardScreen implements Screen {
         for (int i = 0; i < MINIGAME_NAMES.length; i++) {
             final int tabIndex = i;
             String tabName = MINIGAME_NAMES[i];
-            TextButton tabButton = new TextButton(tabName, gameInstance.getSkin());
             
-            // Highlight current tab
-            if (i == currentTabIndex) {
-                tabButton.setColor(1f, 0.8f, 0.3f, 1f); // Gold highlight
+            // Add visual markers to selected tab
+            boolean isSelected = (i == currentTabIndex);
+            String displayName = isSelected ? "[ " + tabName + " ]" : tabName;
+            TextButton tabButton = new TextButton(displayName, gameInstance.getSkin());
+            
+            // Style selected vs unselected tabs
+            if (isSelected) {
+                tabButton.setColor(1f, 0.84f, 0f, 1f); // Bright gold for selected
+                tabButton.getLabel().setFontScale(1.1f); // Slightly larger
+            } else {
+                tabButton.setColor(0.6f, 0.6f, 0.6f, 1f); // Dimmed gray for unselected
+                tabButton.getLabel().setFontScale(0.95f);
             }
             
             tabButton.addListener(new ChangeListener() {
@@ -88,7 +101,7 @@ public class LeaderboardScreen implements Screen {
                     buildUI(); // Rebuild UI with new tab
                 }
             });
-            tabRow.add(tabButton).padRight(10).minWidth(100);
+            tabRow.add(tabButton).padRight(10).minWidth(120);
         }
         root.add(tabRow).colspan(3).padBottom(10);
         root.row();

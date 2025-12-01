@@ -58,6 +58,11 @@ public class HowToPlayMenu implements Screen {
      */
     @Override
     public void show() {
+        // Update viewport to current screen size to ensure proper scaling
+        stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (minigames may have changed it for their world-unit viewports)
+        gameInstance.font.getData().setScale(1.0f);
+        
         Table root = new Table();
         root.setFillParent(true);
         stage.addActor(root);

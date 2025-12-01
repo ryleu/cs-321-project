@@ -32,7 +32,7 @@ public class DodgeBallMiniGame extends MiniGame {
     public static final String INSTRUCTIONS = 
         "Don't let the balls touch you!\n\n" +
         "Use your DIRECTIONAL inputs to move around.\n" +
-        "Last player standing wins!";
+        "Survive the longest to win!";
     
     /** Background texture path. */
     private static final String BACKGROUND_PATH = "MiniGames/SimpleRacer/Clouds.png";

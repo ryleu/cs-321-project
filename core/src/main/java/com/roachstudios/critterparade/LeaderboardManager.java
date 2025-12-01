@@ -1,7 +1,9 @@
 package com.roachstudios.critterparade;
 
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
+import com.badlogic.gdx.utils.ObjectMap;
 
 import java.io.File;
 import java.io.FileReader;
@@ -9,10 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Manages persistent leaderboard data stored in ~/.critterparade/leaderboard.json.
@@ -32,17 +31,17 @@ public class LeaderboardManager {
     private static final int MAX_SCORES_PER_GAME = 10;
     
     /** Map of minigame name to list of scores. */
-    private Map<String, List<MiniGameScore>> leaderboards;
+    private ObjectMap<String, Array<MiniGameScore>> leaderboards;
     
     /** Map of minigame name to whether lower score is better. */
-    private Map<String, Boolean> lowerIsBetter;
+    private ObjectMap<String, Boolean> lowerIsBetter;
     
     /**
      * Creates the leaderboard manager and loads existing data if present.
      */
     public LeaderboardManager() {
-        leaderboards = new LinkedHashMap<>();
-        lowerIsBetter = new LinkedHashMap<>();
+        leaderboards = new ObjectMap<>();
+        lowerIsBetter = new ObjectMap<>();
         
         // Configure score direction for each minigame
         lowerIsBetter.put("Simple Racer", true);      // Faster time is better
@@ -62,39 +61,49 @@ public class LeaderboardManager {
      * @return true if the score made it onto the leaderboard
      */
     public boolean submitScore(String minigameName, String playerName, float scoreValue) {
-        List<MiniGameScore> scores = leaderboards.computeIfAbsent(minigameName, k -> new ArrayList<>());
+        Array<MiniGameScore> scores = leaderboards.get(minigameName);
+        if (scores == null) {
+            scores = new Array<>();
+            leaderboards.put(minigameName, scores);
+        }
         
         MiniGameScore newScore = new MiniGameScore(playerName, scoreValue);
         scores.add(newScore);
         
         // Sort based on whether lower or higher is better
-        boolean isLowerBetter = lowerIsBetter.getOrDefault(minigameName, false);
+        Boolean lower = lowerIsBetter.get(minigameName);
+        boolean isLowerBetter = lower != null ? lower : false;
         sortScores(scores, isLowerBetter);
         
         // Trim to max size
-        while (scores.size() > MAX_SCORES_PER_GAME) {
-            scores.remove(scores.size() - 1);
+        while (scores.size > MAX_SCORES_PER_GAME) {
+            scores.removeIndex(scores.size - 1);
         }
         
         // Save after each submission
         save();
         
         // Check if the new score is still in the list
-        return scores.contains(newScore);
+        return scores.contains(newScore, false);
     }
     
     /**
      * Gets the leaderboard for a specific minigame.
      *
      * @param minigameName the name of the minigame
-     * @return unmodifiable list of scores, sorted best to worst
+     * @return list of scores, sorted best to worst
      */
     public List<MiniGameScore> getScores(String minigameName) {
-        List<MiniGameScore> scores = leaderboards.get(minigameName);
+        Array<MiniGameScore> scores = leaderboards.get(minigameName);
         if (scores == null) {
             return Collections.emptyList();
         }
-        return Collections.unmodifiableList(scores);
+        // Convert to Java List for compatibility
+        List<MiniGameScore> result = new ArrayList<>();
+        for (MiniGameScore score : scores) {
+            result.add(score);
+        }
+        return result;
     }
     
     /**
@@ -103,7 +112,11 @@ public class LeaderboardManager {
      * @return list of minigame names with scores
      */
     public List<String> getMinigamesWithScores() {
-        return new ArrayList<>(leaderboards.keySet());
+        List<String> result = new ArrayList<>();
+        for (String key : leaderboards.keys()) {
+            result.add(key);
+        }
+        return result;
     }
     
     /**
@@ -113,7 +126,8 @@ public class LeaderboardManager {
      * @return true if lower is better (like race times)
      */
     public boolean isLowerBetter(String minigameName) {
-        return lowerIsBetter.getOrDefault(minigameName, false);
+        Boolean lower = lowerIsBetter.get(minigameName);
+        return lower != null ? lower : false;
     }
     
     /**
@@ -156,16 +170,26 @@ public class LeaderboardManager {
     /**
      * Sorts scores by value, best first.
      */
-    private void sortScores(List<MiniGameScore> scores, boolean lowerIsBetter) {
+    private void sortScores(Array<MiniGameScore> scores, boolean lowerIsBetter) {
         if (lowerIsBetter) {
-            scores.sort(Comparator.comparingDouble(MiniGameScore::getScoreValue));
+            scores.sort((a, b) -> Float.compare(a.getScoreValue(), b.getScoreValue()));
         } else {
             scores.sort((a, b) -> Float.compare(b.getScoreValue(), a.getScoreValue()));
         }
     }
     
     /**
+     * Creates a configured Json instance for serialization.
+     */
+    private Json createJson() {
+        Json json = new Json();
+        json.setOutputType(JsonWriter.OutputType.json);
+        return json;
+    }
+    
+    /**
      * Loads leaderboard data from the JSON file.
+     * If the file is malformed, it will be deleted and a fresh start begins.
      */
     @SuppressWarnings("unchecked")
     private void load() {
@@ -176,49 +200,52 @@ public class LeaderboardManager {
         }
         
         try (FileReader reader = new FileReader(leaderboardFile)) {
-            Json json = new Json();
-            Map<String, Object> data = json.fromJson(LinkedHashMap.class, reader);
+            Json json = createJson();
             
-            if (data != null) {
-                for (Map.Entry<String, Object> entry : data.entrySet()) {
-                    String minigameName = entry.getKey();
-                    ArrayList<LinkedHashMap<String, Object>> scoreList = 
-                        (ArrayList<LinkedHashMap<String, Object>>) entry.getValue();
+            // Read as ObjectMap and manually convert entries
+            ObjectMap<String, Array<Object>> rawData = json.fromJson(ObjectMap.class, reader);
+            
+            if (rawData != null) {
+                for (ObjectMap.Entry<String, Array<Object>> entry : rawData.entries()) {
+                    Array<MiniGameScore> scores = new Array<>();
                     
-                    List<MiniGameScore> scores = new ArrayList<>();
-                    for (LinkedHashMap<String, Object> scoreData : scoreList) {
-                        MiniGameScore score = new MiniGameScore();
-                        
-                        Object playerNameObj = scoreData.get("playerName");
-                        if (playerNameObj != null) {
-                            score.setPlayerName(playerNameObj.toString());
+                    for (Object obj : entry.value) {
+                        if (obj instanceof MiniGameScore) {
+                            scores.add((MiniGameScore) obj);
+                        } else if (obj instanceof ObjectMap) {
+                            // Manually convert ObjectMap to MiniGameScore
+                            ObjectMap<String, Object> map = (ObjectMap<String, Object>) obj;
+                            MiniGameScore score = new MiniGameScore();
+                            
+                            Object name = map.get("playerName");
+                            if (name != null) score.setPlayerName(name.toString());
+                            
+                            Object value = map.get("scoreValue");
+                            if (value instanceof Number) score.setScoreValue(((Number) value).floatValue());
+                            
+                            Object time = map.get("timestamp");
+                            if (time instanceof Number) score.setTimestamp(((Number) time).longValue());
+                            
+                            scores.add(score);
                         }
-                        
-                        Object scoreValueObj = scoreData.get("scoreValue");
-                        if (scoreValueObj != null) {
-                            score.setScoreValue(((Number) scoreValueObj).floatValue());
-                        }
-                        
-                        Object timestampObj = scoreData.get("timestamp");
-                        if (timestampObj != null) {
-                            score.setTimestamp(((Number) timestampObj).longValue());
-                        }
-                        
-                        scores.add(score);
                     }
                     
-                    leaderboards.put(minigameName, scores);
+                    leaderboards.put(entry.key, scores);
                 }
             }
         } catch (IOException e) {
             System.err.println("[LeaderboardManager] Failed to load leaderboard: " + e.getMessage());
         } catch (Exception e) {
-            System.err.println("[LeaderboardManager] Error parsing leaderboard data: " + e.getMessage());
+            // Malformed file - delete it and start fresh
+            System.err.println("[LeaderboardManager] Malformed leaderboard file, deleting: " + e.getMessage());
+            if (leaderboardFile.delete()) {
+                System.out.println("[LeaderboardManager] Deleted malformed leaderboard file");
+            }
         }
     }
     
     /**
-     * Saves leaderboard data to the JSON file.
+     * Saves leaderboard data to the JSON file using libGDX types.
      */
     private void save() {
         File leaderboardFile = getLeaderboardFile();
@@ -230,24 +257,9 @@ public class LeaderboardManager {
             return;
         }
         
-        // Convert to serializable format
-        Map<String, List<Map<String, Object>>> data = new LinkedHashMap<>();
-        for (Map.Entry<String, List<MiniGameScore>> entry : leaderboards.entrySet()) {
-            List<Map<String, Object>> scoreList = new ArrayList<>();
-            for (MiniGameScore score : entry.getValue()) {
-                Map<String, Object> scoreData = new LinkedHashMap<>();
-                scoreData.put("playerName", score.getPlayerName());
-                scoreData.put("scoreValue", score.getScoreValue());
-                scoreData.put("timestamp", score.getTimestamp());
-                scoreList.add(scoreData);
-            }
-            data.put(entry.getKey(), scoreList);
-        }
-        
         try (FileWriter writer = new FileWriter(leaderboardFile)) {
-            Json json = new Json();
-            json.setOutputType(JsonWriter.OutputType.json);
-            writer.write(json.prettyPrint(data));
+            Json json = createJson();
+            writer.write(json.prettyPrint(leaderboards));
         } catch (IOException e) {
             System.err.println("[LeaderboardManager] Failed to save leaderboard: " + e.getMessage());
         }
