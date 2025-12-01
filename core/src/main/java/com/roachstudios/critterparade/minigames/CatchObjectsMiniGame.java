@@ -32,6 +32,18 @@ public class CatchObjectsMiniGame extends MiniGame {
     public String getInstructions() {
         return INSTRUCTIONS;
     }
+    
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their score (stars caught)
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return scores[i];
+            }
+        }
+        return -1f;
+    }
 
     private Texture backgroundTex;
     private Texture fallingObjectTex;

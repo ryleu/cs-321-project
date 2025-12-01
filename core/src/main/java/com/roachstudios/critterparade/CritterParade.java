@@ -107,6 +107,7 @@ public class CritterParade extends Game {
     
     private SettingsManager settings;
     private SessionLogger sessionLogger;
+    private LeaderboardManager leaderboardManager;
     
     /**
      * Creates the game with debug mode disabled.
@@ -150,6 +151,15 @@ public class CritterParade extends Game {
      */
     public SessionLogger getSessionLogger() {
         return sessionLogger;
+    }
+    
+    /**
+     * Gets the leaderboard manager for tracking high scores.
+     *
+     * @return the leaderboard manager for tracking high scores
+     */
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
     
     /**
@@ -273,6 +283,9 @@ public class CritterParade extends Game {
 
         // Load settings and check for first run
         settings = new SettingsManager();
+        
+        // Initialize leaderboard manager
+        leaderboardManager = new LeaderboardManager();
         
         if (settings.isFirstRun()) {
             // Show consent screen on first run

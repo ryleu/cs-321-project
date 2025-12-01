@@ -91,6 +91,17 @@ public class MainMenu implements Screen {
 
         root.row();
 
+        TextButton leaderboard = new TextButton("Leaderboard", gameInstance.skin);
+        leaderboard.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new LeaderboardScreen(gameInstance));
+            }
+        });
+        root.add(leaderboard).fill().align(Align.center);
+
+        root.row();
+
         TextButton exit = new TextButton("Exit", gameInstance.skin);
         exit.addListener(new ChangeListener() {
             @Override

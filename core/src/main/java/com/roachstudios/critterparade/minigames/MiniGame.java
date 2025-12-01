@@ -3,6 +3,7 @@ package com.roachstudios.critterparade.minigames;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.roachstudios.critterparade.CritterParade;
+import com.roachstudios.critterparade.LeaderboardManager;
 import com.roachstudios.critterparade.Player;
 
 /**
@@ -16,6 +17,10 @@ import com.roachstudios.critterparade.Player;
  * 
  * <p>The ready-up phase and countdown are handled by {@link com.roachstudios.critterparade.menus.MiniGameInstructionScreen}
  * before the minigame starts.</p>
+ * 
+ * <p>Subclasses should implement {@link #getScoreValue(Player)} to provide the
+ * measurable score for leaderboard tracking (e.g., finish time, survival time,
+ * objects caught).</p>
  */
 public abstract class MiniGame implements Screen {
     
@@ -32,6 +37,22 @@ public abstract class MiniGame implements Screen {
      * @return instructions explaining how to play this mini game
      */
     public abstract String getInstructions();
+    
+    /**
+     * Gets the measurable score value for a player.
+     * This value is used for leaderboard tracking.
+     * 
+     * <p>Interpretation depends on the minigame:
+     * <ul>
+     *   <li>SimpleRacer: finish time in seconds (lower is better)</li>
+     *   <li>Dodgeball: survival time in seconds (higher is better)</li>
+     *   <li>Catching Stars: objects caught count (higher is better)</li>
+     * </ul>
+     *
+     * @param player the player to get the score for
+     * @return the score value, or -1 if not applicable
+     */
+    public abstract float getScoreValue(Player player);
     
     /**
      * Reference to the main game instance for accessing shared resources.
@@ -306,6 +327,9 @@ public abstract class MiniGame implements Screen {
         // Award crumbs based on placement (5 for 1st, scaling down to 0 for last)
         int[] crumbsAwarded = awardPlacementCrumbs(placements);
         
+        // Submit scores to leaderboard
+        submitScoresToLeaderboard(placements);
+        
         // Log minigame completion
         game.log("Minigame '%s' completed", getName());
         if (placements != null) {
@@ -317,6 +341,27 @@ public abstract class MiniGame implements Screen {
         }
         
         game.setScreen(new com.roachstudios.critterparade.menus.MiniGameResultScreen(game, placements));
+    }
+    
+    /**
+     * Submits all player scores to the leaderboard.
+     *
+     * @param placements players ordered from 1st to last place
+     */
+    protected void submitScoresToLeaderboard(Player[] placements) {
+        if (placements == null) return;
+        
+        LeaderboardManager leaderboard = game.getLeaderboardManager();
+        if (leaderboard == null) return;
+        
+        for (Player player : placements) {
+            if (player != null) {
+                float scoreValue = getScoreValue(player);
+                if (scoreValue >= 0) {
+                    leaderboard.submitScore(getName(), player.getName(), scoreValue);
+                }
+            }
+        }
     }
     
     /**

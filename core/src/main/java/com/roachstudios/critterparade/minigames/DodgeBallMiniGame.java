@@ -37,6 +37,18 @@ public class DodgeBallMiniGame extends MiniGame {
         return INSTRUCTIONS;
     }
     
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their survival time
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return survivalTimes[i];
+            }
+        }
+        return -1f;
+    }
+    
     private Texture backgroundTex;
     private Texture playerOutTex;
 
@@ -67,6 +79,12 @@ public class DodgeBallMiniGame extends MiniGame {
     private float coolDown = 1f;
     
     /**
+     * Tracks the survival time for each player (index = player array index).
+     * -1 means the player is still alive.
+     */
+    private float[] survivalTimes;
+    
+    /**
      * Constructs a new Simple Racer mini game.
      *
      * @param game shared game instance providing viewport, batch, and players
@@ -77,6 +95,7 @@ public class DodgeBallMiniGame extends MiniGame {
         int playerCount = getPlayerCount();
         placement = new Player[playerCount];
         playerFinished = new boolean[playerCount];
+        survivalTimes = new float[playerCount];
         haventFinished = playerCount - 1;
         gameCompleted = false;
         
@@ -93,6 +112,7 @@ public class DodgeBallMiniGame extends MiniGame {
             player.getSprite().setY(4);
             clampBounds(player);
             playerFinished[i] = false;
+            survivalTimes[i] = -1f; // -1 means still alive
         }
     }
     
@@ -104,9 +124,11 @@ public class DodgeBallMiniGame extends MiniGame {
         // Reset game state in case we're replaying
         haventFinished = getPlayerCount() - 1;
         gameCompleted = false;
+        timeElapsed = 0f;
         for (int i = 0; i < playerFinished.length; i++) {
             playerFinished[i] = false;
             placement[i] = null;
+            survivalTimes[i] = -1f;
         }
         
         // Reset positions and sizes when the minigame is shown
@@ -174,13 +196,13 @@ public class DodgeBallMiniGame extends MiniGame {
             
             clampBounds(player);
             
-            // THIS IS THE CODE THAT FAILS====================
+            // Check if player was eliminated
             if (checkIfOut(player) && !playerFinished[i]) {
                 playerFinished[i] = true;
+                survivalTimes[i] = timeElapsed; // Record survival time
                 placement[haventFinished] = player;
                 haventFinished--;
             }
-            //=================================================
             
         }
         
@@ -246,7 +268,9 @@ public class DodgeBallMiniGame extends MiniGame {
                 if (!playerFinished[i]) {
                     winner = players[i];
                     // Mark them as finished (optional, but good practice)
-                    playerFinished[i] = true; 
+                    playerFinished[i] = true;
+                    // Winner gets the current time as their survival time
+                    survivalTimes[i] = timeElapsed;
                     break;
                 }
             }
