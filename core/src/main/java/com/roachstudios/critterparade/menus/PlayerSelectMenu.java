@@ -5,9 +5,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -48,10 +48,10 @@ public class PlayerSelectMenu implements Screen {
         stage.addActor(root);
         root.setFillParent(true);
 
-        TextField title = new TextField("Select Number of Players", gameInstance.skin);
+        Label title = new Label("Select Number of Players", gameInstance.skin);
         title.setAlignment(Align.center);
 
-        root.add(title).expandX().fillX();
+        root.add(title).expandX().fillX().padBottom(20);
 
         for (int i = 2; i <= 6; i++) {
             root.row();
@@ -71,10 +71,13 @@ public class PlayerSelectMenu implements Screen {
                     }
                     gameInstance.logPlayersInitialized(finalI, names);
                     
+                    // Start board music (stops any currently playing music)
+                    gameInstance.startBoardMusic();
+                    
                     gameInstance.setScreen(nextScreen.get());
                 }
             });
-            root.add(changeButton);
+            root.add(changeButton).pad(5);
         }
 
         root.setDebug(gameInstance.isDebugMode(), true);

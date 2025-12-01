@@ -10,9 +10,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -45,7 +45,7 @@ public class MiniGameResultScreen implements Screen{
     /**
      * Label showing the countdown timer.
      */
-    private TextField timerLabel;
+    private Label timerLabel;
     
     /**
      * Constructs the mini game result screen.
@@ -72,10 +72,10 @@ public class MiniGameResultScreen implements Screen{
         stage.addActor(root);
         root.setFillParent(true);
         
-        TextField title = new TextField("Results:", gameInstance.skin);
+        Label title = new Label("Results:", gameInstance.skin);
         title.setAlignment(Align.center);
 
-        root.add(title).expandX().fillX();
+        root.add(title).expandX().fillX().padBottom(10);
         
         int numPlayers = placements.length;
         for(int i = 0; i < numPlayers; i++){
@@ -86,12 +86,12 @@ public class MiniGameResultScreen implements Screen{
             int pointsAwarded = (5 * (numPlayers - placement)) / (numPlayers - 1);
             
             String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
-            TextField place = new TextField(resultText, gameInstance.skin);
+            Label place = new Label(resultText, gameInstance.skin);
             place.setAlignment(Align.center);
-            root.add(place).expandX().fillX();
+            root.add(place).expandX().fillX().pad(3);
         }
         
-        // Continue action depends on whether we are in the board flow or practice.
+        // Continue action depends on whether we are in the board flow, practice, or rush.
         if(gameInstance.mode == CritterParade.Mode.BOARD_MODE){
             root.row();
             TextButton changeButton = new TextButton("Continue", gameInstance.skin);
@@ -102,6 +102,8 @@ public class MiniGameResultScreen implements Screen{
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
                     if (!hasNavigated) {
                         hasNavigated = true;
+                        // Resume board music
+                        gameInstance.startBoardMusic();
                         // Create a fresh board - player state is stored in Player objects
                         gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                     }
@@ -111,7 +113,7 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
@@ -135,7 +137,47 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
+            timerLabel.setAlignment(Align.center);
+            root.add(timerLabel).expandX().fillX().padTop(10);
+        
+            root.setDebug(gameInstance.isDebugMode(), true);
+        }else if(gameInstance.mode == CritterParade.Mode.RUSH_MODE){
+            // In rush mode, show progress and continue to next minigame or final results
+            MiniGameRushController rushController = gameInstance.getRushController();
+            
+            // Show rush progress
+            root.row();
+            String progressText = "Minigame " + rushController.getCurrentMinigameNumber() + 
+                    " of " + rushController.getTotalMinigameCount() + " complete";
+            Label progressLabel = new Label(progressText, gameInstance.skin);
+            progressLabel.setAlignment(Align.center);
+            root.add(progressLabel).expandX().fillX().padTop(10);
+            
+            // Advance to next minigame
+            rushController.advanceToNextMinigame();
+            
+            root.row();
+            String buttonText = rushController.hasNextMinigame() ? "Next Minigame" : "See Final Results";
+            TextButton changeButton = new TextButton(buttonText, gameInstance.skin);
+            changeButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeListener.ChangeEvent event, Actor actor) {
+                    if (!hasNavigated) {
+                        hasNavigated = true;
+                        if (rushController.hasNextMinigame()) {
+                            rushController.startCurrentMinigame();
+                        } else {
+                            rushController.showFinalResults();
+                        }
+                    }
+                }
+            });
+            root.add(changeButton);
+            
+            // Add timer label
+            root.row();
+            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
@@ -164,9 +206,19 @@ public class MiniGameResultScreen implements Screen{
             if (autoSkipTimer <= 0) {
                 hasNavigated = true;
                 if (gameInstance.mode == CritterParade.Mode.BOARD_MODE) {
+                    // Resume board music
+                    gameInstance.startBoardMusic();
                     gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                 } else if (gameInstance.mode == CritterParade.Mode.PRACTICE_MODE) {
+                    // MainMenu.show() will start intro music
                     gameInstance.setScreen(new MainMenu(gameInstance));
+                } else if (gameInstance.mode == CritterParade.Mode.RUSH_MODE) {
+                    MiniGameRushController rushController = gameInstance.getRushController();
+                    if (rushController.hasNextMinigame()) {
+                        rushController.startCurrentMinigame();
+                    } else {
+                        rushController.showFinalResults();
+                    }
                 }
                 return;
             }

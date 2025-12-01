@@ -93,9 +93,8 @@ public class MiniGameInstructionScreen implements Screen {
 
         // Title - game name
         Label titleLabel = new Label(gameName, gameInstance.skin);
-        titleLabel.setFontScale(2.0f);
         titleLabel.setAlignment(Align.center);
-        root.add(titleLabel).fillX().padBottom(20);
+        root.add(titleLabel).fillX().padBottom(15);
         root.row();
 
         // Instructions
@@ -131,10 +130,9 @@ public class MiniGameInstructionScreen implements Screen {
         
         // Countdown label (hidden initially)
         countdownLabel = new Label("", gameInstance.skin);
-        countdownLabel.setFontScale(3.0f);
         countdownLabel.setColor(Color.YELLOW);
         countdownLabel.setAlignment(Align.center);
-        root.add(countdownLabel).fillX().padTop(20);
+        root.add(countdownLabel).fillX().padTop(10);
         root.row();
         
         // Action key hints
@@ -201,6 +199,9 @@ public class MiniGameInstructionScreen implements Screen {
         
         if (countdownTimer <= 0 && !hasStarted) {
             hasStarted = true;
+            
+            // Start minigame music (stops any currently playing music)
+            gameInstance.startMinigameMusic();
             
             // Log minigame start
             gameInstance.log("Starting minigame: %s", gameName);

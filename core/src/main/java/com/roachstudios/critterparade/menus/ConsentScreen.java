@@ -41,8 +41,7 @@ public class ConsentScreen implements Screen {
         
         // Title
         Label titleLabel = new Label("Session Logging", game.skin);
-        titleLabel.setFontScale(2f);
-        root.add(titleLabel).padBottom(30).row();
+        root.add(titleLabel).padBottom(20).row();
         
         // Description
         String description = 

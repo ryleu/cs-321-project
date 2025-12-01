@@ -204,6 +204,19 @@ public class SessionLogger {
     }
     
     /**
+     * Logs a music track change.
+     *
+     * @param theme the music theme that started playing
+     * @param action the action taken (play, stop, pause, resume)
+     */
+    public void logMusicChange(String theme, String action) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("theme", theme);
+        data.put("action", action);
+        logEvent("music_change", data);
+    }
+    
+    /**
      * Saves the session log to a JSON file.
      * Called on game dispose.
      */

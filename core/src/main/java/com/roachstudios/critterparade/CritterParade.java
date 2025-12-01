@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.gameboards.GameBoard;
 import com.roachstudios.critterparade.gameboards.KitchenHavocBoard;
@@ -15,6 +14,7 @@ import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
+import com.roachstudios.critterparade.menus.MiniGameRushController;
 import com.roachstudios.critterparade.minigames.CatchObjectsMiniGame;
 import com.roachstudios.critterparade.minigames.DodgeBallMiniGame;
 
@@ -35,7 +35,7 @@ public class CritterParade extends Game {
     /** Shared bitmap font used for text rendering across all screens. */
     public BitmapFont font;
     /** Shared UI skin used for scene2d widgets across all screens. */
-    public Skin skin;
+    public CritterParadeSkin skin;
     /** Shared viewport used for consistent UI scaling across screen sizes. */
     public FitViewport viewport;
 
@@ -85,7 +85,9 @@ public class CritterParade extends Game {
         /** Full board game mode with minigames and fruits. */
         BOARD_MODE,
         /** Practice mode for playing individual minigames. */
-        PRACTICE_MODE
+        PRACTICE_MODE,
+        /** Rush mode: play all minigames back-to-back, most crumbs wins. */
+        RUSH_MODE
     }
     
     /** Current game mode affecting navigation flow between screens. */
@@ -108,6 +110,15 @@ public class CritterParade extends Game {
     
     private SettingsManager settings;
     private SessionLogger sessionLogger;
+    private LeaderboardManager leaderboardManager;
+    
+    /**
+     * Controller for minigame rush mode, tracks the sequence of minigames.
+     */
+    private MiniGameRushController rushController;
+    
+    /** Centralized music player for all game music. */
+    private MusicPlayer musicPlayer;
     
     /**
      * Creates the game with debug mode disabled.
@@ -151,6 +162,15 @@ public class CritterParade extends Game {
      */
     public SessionLogger getSessionLogger() {
         return sessionLogger;
+    }
+    
+    /**
+     * Gets the leaderboard manager for tracking high scores.
+     *
+     * @return the leaderboard manager for tracking high scores
+     */
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
     
     /**
@@ -248,21 +268,110 @@ public class CritterParade extends Game {
             sessionLogger.logScreenChange(screenName);
         }
     }
+    
+    /**
+     * Logs a music track change if logging is enabled.
+     *
+     * @param theme the music theme
+     * @param action the action taken (play, stop, pause, resume)
+     */
+    public void logMusicChange(String theme, String action) {
+        if (sessionLogger != null) {
+            sessionLogger.logMusicChange(theme, action);
+        }
+    }
+    
+    // =========================================================================
+    // Rush Mode Controller
+    // =========================================================================
+    
+    /**
+     * Gets the current rush mode controller.
+     *
+     * @return the rush controller, or null if not in rush mode
+     */
+    public MiniGameRushController getRushController() {
+        return rushController;
+    }
+    
+    /**
+     * Sets the rush mode controller.
+     *
+     * @param controller the rush controller to use
+     */
+    public void setRushController(MiniGameRushController controller) {
+        this.rushController = controller;
+    }
+    
+    /**
+     * Clears the rush mode controller when exiting rush mode.
+     */
+    public void clearRushController() {
+        this.rushController = null;
+    }
+    
+    // =========================================================================
+    // Music Management
+    // =========================================================================
+    
+    /**
+     * Gets the music player for controlling game music.
+     * 
+     * @return the music player instance
+     */
+    public MusicPlayer getMusicPlayer() {
+        return musicPlayer;
+    }
+    
+    /**
+     * Starts the intro/menu music if it's not already playing.
+     */
+    public void startIntroMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playIntro();
+        }
+    }
+    
+    /**
+     * Stops the currently playing music.
+     */
+    public void stopIntroMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.stop();
+        }
+    }
+    
+    /**
+     * Starts the game board music.
+     */
+    public void startBoardMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playBoard();
+        }
+    }
+    
+    /**
+     * Starts a randomly selected minigame music track.
+     */
+    public void startMinigameMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playMinigame();
+        }
+    }
 
     /**
      * Initializes shared resources and registers boards/mini games.
      */
     public void create() {
         batch = new SpriteBatch();
-        font = new BitmapFont();
+        
+        // Initialize skin (loads VCR OSD Mono font internally)
         skin = new CritterParadeSkin();
+        font = skin.getFont();
+        
         // Use a small 16x9 virtual world for UI scaling; scene2d widgets are laid out
         // in this space and scaled to the actual window while preserving aspect ratio.
         viewport = new FitViewport(16,9);
-
-        font.setUseIntegerPositions(false);
-        // Scale font so that it renders with consistent perceived size across resolutions.
-        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
 
         // register game boards
         registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
@@ -273,8 +382,14 @@ public class CritterParade extends Game {
         registerMiniGame(DodgeBallMiniGame.NAME, () -> new DodgeBallMiniGame(this));
         registerMiniGame(CatchObjectsMiniGame.NAME, () -> new CatchObjectsMiniGame(this));
 
+        // Initialize music player
+        musicPlayer = new MusicPlayer(this);
+
         // Load settings and check for first run
         settings = new SettingsManager();
+        
+        // Initialize leaderboard manager
+        leaderboardManager = new LeaderboardManager();
         
         if (settings.isFirstRun()) {
             // Show consent screen on first run
@@ -296,6 +411,30 @@ public class CritterParade extends Game {
     }
 
     /**
+     * Called when the application loses focus. Pauses music.
+     */
+    @Override
+    public void pause() {
+        super.pause();
+        log("Application lost focus");
+        if (musicPlayer != null) {
+            musicPlayer.pause();
+        }
+    }
+
+    /**
+     * Called when the application regains focus. Resumes music.
+     */
+    @Override
+    public void resume() {
+        super.resume();
+        log("Application regained focus");
+        if (musicPlayer != null) {
+            musicPlayer.resume();
+        }
+    }
+
+    /**
      * Disposes shared resources created in {@link #create()}.
      */
     public void dispose() {
@@ -305,8 +444,12 @@ public class CritterParade extends Game {
         }
         
         batch.dispose();
-        font.dispose();
+        skin.dispose(); // Disposes font as well
         disposePlayerTextures();
+        
+        if (musicPlayer != null) {
+            musicPlayer.dispose();
+        }
     }
 
     /**

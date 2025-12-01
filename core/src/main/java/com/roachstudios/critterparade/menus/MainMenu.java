@@ -42,6 +42,9 @@ public class MainMenu implements Screen {
      * Composes the menu UI using a columnar {@link Table} layout.
      */
     public void show() {
+        // Start playing intro music (managed by CritterParade)
+        gameInstance.startIntroMusic();
+        
         // the main element of the menu, everything else is a child of this
         Table root = new Table();
         root.setFillParent(true);
@@ -62,7 +65,7 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new BoardSelectMenu(gameInstance));
             }
         });
-        root.add(play).fillX().align(Align.center);
+        root.add(play).fillX().pad(5).align(Align.center);
 
         root.row();
 
@@ -76,7 +79,30 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
             }
         });
-        root.add(miniGames).fill().align(Align.center);
+        root.add(miniGames).fill().pad(5).align(Align.center);
+
+        root.row();
+
+        TextButton rushMode = new TextButton("Minigame Rush", gameInstance.skin);
+        rushMode.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.mode = CritterParade.Mode.RUSH_MODE;
+                gameInstance.log("Mode selected: RUSH_MODE");
+                gameInstance.logModeSelected(CritterParade.Mode.RUSH_MODE);
+                // Go to player select, then start the rush
+                gameInstance.setScreen(new PlayerSelectMenu(gameInstance, () -> {
+                    // Reset player scores for a fresh rush
+                    gameInstance.resetPlayerScores();
+                    // Create and set the rush controller
+                    MiniGameRushController rushController = new MiniGameRushController(gameInstance);
+                    gameInstance.setRushController(rushController);
+                    // Return the instruction screen for the first minigame
+                    return new MiniGameInstructionScreen(gameInstance, rushController.getCurrentMinigame().supplier());
+                }));
+            }
+        });
+        root.add(rushMode).fill().align(Align.center);
 
         root.row();
 
@@ -87,7 +113,18 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new HowToPlayMenu(gameInstance));
             }
         });
-        root.add(howToPlay).fill().align(Align.center);
+        root.add(howToPlay).fill().pad(5).align(Align.center);
+
+        root.row();
+
+        TextButton leaderboard = new TextButton("Leaderboard", gameInstance.skin);
+        leaderboard.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new LeaderboardScreen(gameInstance));
+            }
+        });
+        root.add(leaderboard).fill().align(Align.center);
 
         root.row();
 
@@ -98,7 +135,7 @@ public class MainMenu implements Screen {
                 Gdx.app.exit();
             }
         });
-        root.add(exit).fill().align(Align.center);
+        root.add(exit).fill().pad(5).align(Align.center);
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }
@@ -136,7 +173,7 @@ public class MainMenu implements Screen {
 
     @Override
     public void hide() {
-
+        // Music is managed by CritterParade, don't stop it here
     }
 
     @Override

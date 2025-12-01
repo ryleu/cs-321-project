@@ -31,6 +31,18 @@ public class SimpleRacerMiniGame extends MiniGame {
         return INSTRUCTIONS;
     }
     
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their finish time
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return finishTimes[i];
+            }
+        }
+        return -1f;
+    }
+    
     private Texture backgroundTex;
     private Texture finishLineTex;
     
@@ -54,6 +66,17 @@ public class SimpleRacerMiniGame extends MiniGame {
     private boolean gameCompleted;
     
     /**
+     * Tracks the finish time for each player (index = player array index).
+     * -1 means the player hasn't finished yet.
+     */
+    private float[] finishTimes;
+    
+    /**
+     * Game clock for tracking elapsed time.
+     */
+    private float gameTimer;
+    
+    /**
      * Constructs a new Simple Racer mini game.
      *
      * @param game shared game instance providing viewport, batch, and players
@@ -64,8 +87,10 @@ public class SimpleRacerMiniGame extends MiniGame {
         int playerCount = getPlayerCount();
         placement = new Player[playerCount];
         playerFinished = new boolean[playerCount];
+        finishTimes = new float[playerCount];
         finishedCount = 0;
         gameCompleted = false;
+        gameTimer = 0f;
         
         backgroundTex = new Texture("MiniGames/SimpleRacer/Clouds.png");
         finishLineTex = new Texture("MiniGames/SimpleRacer/FinishLine.png");
@@ -78,6 +103,7 @@ public class SimpleRacerMiniGame extends MiniGame {
             player.getSprite().setX(0);
             player.getSprite().setY(playerSize * i);
             playerFinished[i] = false;
+            finishTimes[i] = -1f;
         }
     }
 
@@ -89,9 +115,11 @@ public class SimpleRacerMiniGame extends MiniGame {
         // Reset game state in case we're replaying
         finishedCount = 0;
         gameCompleted = false;
+        gameTimer = 0f;
         for (int i = 0; i < playerFinished.length; i++) {
             playerFinished[i] = false;
             placement[i] = null;
+            finishTimes[i] = -1f;
         }
         
         // Reset positions and sizes when the minigame is shown
@@ -134,6 +162,10 @@ public class SimpleRacerMiniGame extends MiniGame {
      */
     private void logic() {
         float worldWidth = game.viewport.getWorldWidth();
+        float delta = Gdx.graphics.getDeltaTime();
+        
+        // Update game timer
+        gameTimer += delta;
         
         Player[] players = getPlayers();
         float playerWidth = players[0].getSprite().getWidth();
@@ -155,6 +187,7 @@ public class SimpleRacerMiniGame extends MiniGame {
             // Check if player crossed finish line
             if (player.getSprite().getX() >= 14 && !playerFinished[i]) {
                 playerFinished[i] = true;
+                finishTimes[i] = gameTimer; // Record finish time
                 placement[finishedCount] = player;
                 finishedCount++;
             }

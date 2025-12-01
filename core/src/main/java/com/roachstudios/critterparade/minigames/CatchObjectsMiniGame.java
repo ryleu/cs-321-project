@@ -32,6 +32,18 @@ public class CatchObjectsMiniGame extends MiniGame {
     public String getInstructions() {
         return INSTRUCTIONS;
     }
+    
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their score (stars caught)
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return scores[i];
+            }
+        }
+        return -1f;
+    }
 
     private Texture backgroundTex;
     private Texture fallingObjectTex;
@@ -238,6 +250,9 @@ public class CatchObjectsMiniGame extends MiniGame {
             player.getSprite().draw(game.batch);
         }
         
+        // Scale font for 16x9 viewport (font is sized for 640x360 menu viewport)
+        game.font.getData().setScale(16f / 640f);
+        
         // Draw color-coded score labels at the top
         float labelSpacing = worldWidth / (playerCount + 1);
         for (int i = 0; i < playerCount; i++) {
@@ -245,8 +260,8 @@ public class CatchObjectsMiniGame extends MiniGame {
             game.font.setColor(playerColor);
             
             String scoreText = "P" + (i + 1) + ": " + scores[i];
-            float labelX = labelSpacing * (i + 1) - 1f;
-            game.font.draw(game.batch, scoreText, labelX, worldHeight - 0.5f);
+            float labelX = labelSpacing * (i + 1) - 0.5f;
+            game.font.draw(game.batch, scoreText, labelX, worldHeight - 0.3f);
         }
         
         // Reset font color and draw timer
@@ -255,8 +270,8 @@ public class CatchObjectsMiniGame extends MiniGame {
         game.font.draw(
             game.batch,
             "Time: " + timeLeft,
-            worldWidth / 2f - 1f,
-            worldHeight - 1.5f
+            worldWidth / 2f - 0.5f,
+            worldHeight - 0.8f
         );
 
         game.batch.end();
