@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.gameboards.GameBoard;
+import com.roachstudios.critterparade.gameboards.KitchenHavocBoard;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
@@ -265,6 +266,7 @@ public class CritterParade extends Game {
 
         // register game boards
         registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
+        registerGameBoard(KitchenHavocBoard.NAME, () -> new KitchenHavocBoard(this));
 
         // register mini games
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
