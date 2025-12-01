@@ -14,6 +14,7 @@ import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
+import com.roachstudios.critterparade.minigames.CatchObjectsMiniGame;
 import com.roachstudios.critterparade.minigames.DodgeBallMiniGame;
 
 import java.util.ArrayList;
@@ -267,7 +268,8 @@ public class CritterParade extends Game {
 
         // register mini games
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
-        registerMiniGame(DodgeBallMiniGame.NAME, () -> new DodgeBallMiniGame(this));//#####################################################
+        registerMiniGame(DodgeBallMiniGame.NAME, () -> new DodgeBallMiniGame(this));
+        registerMiniGame(CatchObjectsMiniGame.NAME, () -> new CatchObjectsMiniGame(this));
 
         // Load settings and check for first run
         settings = new SettingsManager();
