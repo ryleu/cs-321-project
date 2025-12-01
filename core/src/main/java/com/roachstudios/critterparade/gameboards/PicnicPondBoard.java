@@ -250,7 +250,7 @@ public class PicnicPondBoard extends GameBoard {
         // Initialize resources
         backgroundTex = new Texture("board/PicnicPond/background.png");
         shapeRenderer = new ShapeRenderer();
-        font = new BitmapFont();
+        font = gameInstance.font;  // Use shared Minecraftia font
         font.setUseIntegerPositions(false);
         glyphLayout = new GlyphLayout();
         
@@ -395,7 +395,7 @@ public class PicnicPondBoard extends GameBoard {
             junctionOptions.clear();
             junctionOptions.addAll(nextOptions);
             selectedJunctionIndex = 0;
-            statusMessage = "Choose direction! (Left/Right to select, Action to confirm)";
+            statusMessage = "Choose direction!";
         }
     }
     
@@ -668,10 +668,16 @@ public class PicnicPondBoard extends GameBoard {
     private void drawUI(float screenWidth, float screenHeight) {
         gameInstance.batch.begin();
         
+        // Build status message (include die info if rolling)
+        String fullStatus = statusMessage;
+        if (dieResult > 0 && state != GameState.WAITING_FOR_ROLL) {
+            fullStatus += "  |  Die: " + dieResult + " (Moves: " + movesRemaining + ")";
+        }
+        
         // Draw status message at top
         font.getData().setScale(screenHeight / 400f);
         font.setColor(Color.WHITE);
-        glyphLayout.setText(font, statusMessage);
+        glyphLayout.setText(font, fullStatus);
         
         // Background for text
         gameInstance.batch.end();
@@ -684,15 +690,19 @@ public class PicnicPondBoard extends GameBoard {
         Gdx.gl.glDisable(GL20.GL_BLEND);
         
         gameInstance.batch.begin();
-        font.draw(gameInstance.batch, statusMessage, 
+        font.draw(gameInstance.batch, fullStatus, 
             (screenWidth - glyphLayout.width) / 2, 
             screenHeight - 10);
         
-        // Draw player stats at bottom with background
+        // Draw player stats at bottom with background (two rows for 4+ players)
         gameInstance.batch.end();
         
         Player[] players = gameInstance.getPlayers();
-        float statsBarHeight = 40;
+        int playersPerRow = players.length > 3 ? 3 : players.length;
+        int numRows = (players.length + playersPerRow - 1) / playersPerRow;
+        float rowHeight = 22;
+        float statsBarHeight = numRows * rowHeight + 10;
+        
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -702,29 +712,25 @@ public class PicnicPondBoard extends GameBoard {
         Gdx.gl.glDisable(GL20.GL_BLEND);
         
         gameInstance.batch.begin();
-        float statsY = statsBarHeight - 10;
-        float statsX = 20;
-        font.getData().setScale(screenHeight / 600f);
+        font.getData().setScale(screenHeight / 700f);
         
         for (int i = 0; i < players.length; i++) {
             Player p = players[i];
-            String stats = p.getName() + ": " + p.getFruit() + " fruit, " + p.getCrumbs() + " crumbs";
+            // Abbreviated format
+            String stats = p.getName() + " " + p.getFruit() + "F " + p.getCrumbs() + "C";
             if (i == gameInstance.getCurrentPlayerTurn()) {
                 font.setColor(Color.YELLOW);
             } else {
                 font.setColor(Color.WHITE);
             }
+            
+            // Calculate row and column
+            int row = i / playersPerRow;
+            int col = i % playersPerRow;
+            float statsX = 10 + col * (screenWidth / playersPerRow);
+            float statsY = statsBarHeight - 8 - (row * rowHeight);
+            
             font.draw(gameInstance.batch, stats, statsX, statsY);
-            statsX += screenWidth / players.length;
-        }
-        
-        // Draw die result if rolling
-        if (dieResult > 0 && state != GameState.WAITING_FOR_ROLL) {
-            font.getData().setScale(screenHeight / 200f);
-            font.setColor(Color.WHITE);
-            String dieText = "Die: " + dieResult + " (Moves: " + movesRemaining + ")";
-            glyphLayout.setText(font, dieText);
-            font.draw(gameInstance.batch, dieText, screenWidth - glyphLayout.width - 20, screenHeight - 60);
         }
         
         gameInstance.batch.end();
@@ -760,6 +766,6 @@ public class PicnicPondBoard extends GameBoard {
     public void dispose() {
         if (backgroundTex != null) backgroundTex.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
-        if (font != null) font.dispose();
+        // Don't dispose font - it's the shared Minecraftia font from CritterParade
     }
 }

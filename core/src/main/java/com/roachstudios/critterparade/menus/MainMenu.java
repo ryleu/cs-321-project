@@ -62,7 +62,7 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new BoardSelectMenu(gameInstance));
             }
         });
-        root.add(play).fillX().align(Align.center);
+        root.add(play).fillX().pad(5).align(Align.center);
 
         root.row();
 
@@ -76,7 +76,7 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new MiniGameSelectMenu(gameInstance));
             }
         });
-        root.add(miniGames).fill().align(Align.center);
+        root.add(miniGames).fill().pad(5).align(Align.center);
 
         root.row();
 
@@ -87,7 +87,7 @@ public class MainMenu implements Screen {
                 gameInstance.setScreen(new HowToPlayMenu(gameInstance));
             }
         });
-        root.add(howToPlay).fill().align(Align.center);
+        root.add(howToPlay).fill().pad(5).align(Align.center);
 
         root.row();
 
@@ -98,7 +98,7 @@ public class MainMenu implements Screen {
                 Gdx.app.exit();
             }
         });
-        root.add(exit).fill().align(Align.center);
+        root.add(exit).fill().pad(5).align(Align.center);
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }

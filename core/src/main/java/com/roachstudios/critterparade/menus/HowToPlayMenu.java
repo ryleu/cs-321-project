@@ -64,12 +64,12 @@ public class HowToPlayMenu implements Screen {
 
         Label title = new Label("How To Play", gameInstance.skin);
         title.setAlignment(Align.center);
-        root.add(title).fillX();
+        root.add(title).fillX().padBottom(15);
 
         root.row();
 
         Table controlsGrid = new Table();
-        controlsGrid.defaults().pad(2f);
+        controlsGrid.defaults().pad(5f);
 
         addControlCell(controlsGrid, "Ant", antTexture);
         addControlCell(controlsGrid, "Bee", beeTexture);
@@ -93,7 +93,7 @@ public class HowToPlayMenu implements Screen {
                 gameInstance.setScreen(new MainMenu(gameInstance));
             }
         });
-        root.add(backButton).fillX().align(Align.center);
+        root.add(backButton).fillX().pad(10).align(Align.center);
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }

@@ -10,9 +10,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -45,7 +45,7 @@ public class MiniGameResultScreen implements Screen{
     /**
      * Label showing the countdown timer.
      */
-    private TextField timerLabel;
+    private Label timerLabel;
     
     /**
      * Constructs the mini game result screen.
@@ -72,10 +72,10 @@ public class MiniGameResultScreen implements Screen{
         stage.addActor(root);
         root.setFillParent(true);
         
-        TextField title = new TextField("Results:", gameInstance.skin);
+        Label title = new Label("Results:", gameInstance.skin);
         title.setAlignment(Align.center);
 
-        root.add(title).expandX().fillX();
+        root.add(title).expandX().fillX().padBottom(10);
         
         int numPlayers = placements.length;
         for(int i = 0; i < numPlayers; i++){
@@ -86,9 +86,9 @@ public class MiniGameResultScreen implements Screen{
             int pointsAwarded = (5 * (numPlayers - placement)) / (numPlayers - 1);
             
             String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
-            TextField place = new TextField(resultText, gameInstance.skin);
+            Label place = new Label(resultText, gameInstance.skin);
             place.setAlignment(Align.center);
-            root.add(place).expandX().fillX();
+            root.add(place).expandX().fillX().pad(3);
         }
         
         // Continue action depends on whether we are in the board flow or practice.
@@ -111,7 +111,7 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
@@ -135,7 +135,7 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         

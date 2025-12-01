@@ -5,9 +5,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -44,7 +44,7 @@ public class VictoryScreen implements Screen {
         root.setFillParent(true);
 
         // Congratulations title
-        TextField title = new TextField("Congratulations!", gameInstance.skin);
+        Label title = new Label("Congratulations!", gameInstance.skin);
         title.setAlignment(Align.center);
         root.add(title).expandX().fillX();
 
@@ -52,20 +52,20 @@ public class VictoryScreen implements Screen {
 
         // Winner announcement
         String winnerText = winner != null ? winner.getName() + " wins!" : "Game Over!";
-        TextField winnerField = new TextField(winnerText, gameInstance.skin);
-        winnerField.setAlignment(Align.center);
-        root.add(winnerField).expandX().fillX().padTop(20);
+        Label winnerLabel = new Label(winnerText, gameInstance.skin);
+        winnerLabel.setAlignment(Align.center);
+        root.add(winnerLabel).expandX().fillX().padTop(20);
 
         root.row();
 
         // Stats display
         if (winner != null) {
-            TextField statsField = new TextField(
+            Label statsLabel = new Label(
                 "Fruits: " + winner.getFruit() + " | Crumbs: " + winner.getCrumbs() + " | Wins: " + winner.getWins(),
                 gameInstance.skin
             );
-            statsField.setAlignment(Align.center);
-            root.add(statsField).expandX().fillX().padTop(10);
+            statsLabel.setAlignment(Align.center);
+            root.add(statsLabel).expandX().fillX().padTop(10);
             root.row();
         }
 

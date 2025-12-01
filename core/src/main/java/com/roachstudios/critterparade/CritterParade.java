@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.gameboards.GameBoard;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
@@ -34,7 +33,7 @@ public class CritterParade extends Game {
     /** Shared bitmap font used for text rendering across all screens. */
     public BitmapFont font;
     /** Shared UI skin used for scene2d widgets across all screens. */
-    public Skin skin;
+    public CritterParadeSkin skin;
     /** Shared viewport used for consistent UI scaling across screen sizes. */
     public FitViewport viewport;
 
@@ -253,15 +252,14 @@ public class CritterParade extends Game {
      */
     public void create() {
         batch = new SpriteBatch();
-        font = new BitmapFont();
+        
+        // Initialize skin (loads VCR OSD Mono font internally)
         skin = new CritterParadeSkin();
+        font = skin.getFont();
+        
         // Use a small 16x9 virtual world for UI scaling; scene2d widgets are laid out
         // in this space and scaled to the actual window while preserving aspect ratio.
         viewport = new FitViewport(16,9);
-
-        font.setUseIntegerPositions(false);
-        // Scale font so that it renders with consistent perceived size across resolutions.
-        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
 
         // register game boards
         registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
@@ -303,7 +301,7 @@ public class CritterParade extends Game {
         }
         
         batch.dispose();
-        font.dispose();
+        skin.dispose(); // Disposes font as well
         disposePlayerTextures();
     }
 
