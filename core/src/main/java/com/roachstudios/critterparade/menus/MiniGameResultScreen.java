@@ -27,6 +27,7 @@ public class MiniGameResultScreen implements Screen{
     private final CritterParade gameInstance;
     private final Stage stage;
     private Player[] placements;
+    private int[] crumbsAwarded;
     
     /**
      * Time remaining before auto-continue (in seconds).
@@ -48,10 +49,12 @@ public class MiniGameResultScreen implements Screen{
      *
      * @param gameInstance shared game instance used for navigation and skin
      * @param results ordered array of players from 1st to last place
+     * @param crumbsAwarded array of crumbs awarded to each player (parallel to results)
      */
-    public MiniGameResultScreen(CritterParade gameInstance, Player[] results) {
+    public MiniGameResultScreen(CritterParade gameInstance, Player[] results, int[] crumbsAwarded) {
          this.gameInstance = gameInstance;
          this.placements = results;
+         this.crumbsAwarded = crumbsAwarded;
         // Use FitViewport for consistent layout across window sizes.
         stage = new Stage(new FitViewport(640, 360));
 
@@ -83,11 +86,17 @@ public class MiniGameResultScreen implements Screen{
         for(int i = 0; i < numPlayers; i++){
             root.row();
             
-            // Calculate points awarded: floor(5 * (numPlayers - placement) / (numPlayers - 1))
-            int placement = i + 1;
-            int pointsAwarded = (5 * (numPlayers - placement)) / (numPlayers - 1);
+            // Determine display placement accounting for ties
+            // Players with same crumbs share the same placement number
+            int displayPlacement = 1;
+            for (int j = 0; j < i; j++) {
+                if (crumbsAwarded[j] != crumbsAwarded[i]) {
+                    displayPlacement++;
+                }
+            }
             
-            String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
+            int pointsAwarded = crumbsAwarded[i];
+            String resultText = displayPlacement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
             Label place = new Label(resultText, gameInstance.getSkin());
             place.setAlignment(Align.center);
             root.add(place).expandX().fillX().pad(3);

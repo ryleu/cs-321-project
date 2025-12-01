@@ -143,6 +143,8 @@ public class DodgeBallMiniGame extends MiniGame {
     @Override
     public void show() {
         game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (other screens may have changed it)
+        game.getFont().getData().setScale(1.0f);
         
         remainingPlayers = getPlayerCount() - 1;
         gameCompleted = false;
@@ -281,22 +283,10 @@ public class DodgeBallMiniGame extends MiniGame {
     
     /**
      * Checks if the game should end and triggers completion.
+     * The game only ends when ALL players have been eliminated (including the last one).
      */
     private void checkGameComplete() {
-        if (!gameCompleted && remainingPlayers == 0) {
-            Player winner = null;
-            Player[] players = getPlayers();
-            for (int i = 0; i < players.length; i++) {
-                if (!playerEliminated[i]) {
-                    winner = players[i];
-                    playerEliminated[i] = true;
-                    survivalTimes[i] = timeElapsed;
-                    break;
-                }
-            }
-            
-            placement[0] = winner;
-            remainingPlayers--;
+        if (!gameCompleted && remainingPlayers < 0) {
             onGameComplete(placement);
             gameCompleted = true;
         }

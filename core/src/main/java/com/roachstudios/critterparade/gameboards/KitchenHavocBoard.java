@@ -14,9 +14,6 @@ public class KitchenHavocBoard extends GameBoard {
     
     /** The display name for this board. */
     public static final String NAME = "Kitchen Havoc";
-    
-    /** Path to the background texture asset. */
-    private static final String BACKGROUND_PATH = "board/KitchenHavoc/background.png";
 
     /**
      * Constructs a new Kitchen Havoc board.
@@ -24,17 +21,7 @@ public class KitchenHavocBoard extends GameBoard {
      * @param gameInstance the main game instance providing shared resources
      */
     public KitchenHavocBoard(CritterParade gameInstance) {
-        super(gameInstance);
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
-    @Override
-    protected String getBackgroundPath() {
-        return BACKGROUND_PATH;
+        super(gameInstance, NAME, "board/KitchenHavoc/background.png");
     }
     
     @Override

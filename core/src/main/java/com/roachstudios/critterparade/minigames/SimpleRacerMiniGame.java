@@ -111,6 +111,8 @@ public class SimpleRacerMiniGame extends MiniGame {
     public void show() {
         // Update viewport to current screen size
         game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (other screens may have changed it)
+        game.getFont().getData().setScale(1.0f);
         
         // Reset game state in case we're replaying
         finishedCount = 0;

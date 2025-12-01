@@ -124,7 +124,6 @@ public class MiniGameRushController {
     
     /**
      * Gets all players sorted by crumbs (highest first) for final standings.
-     * Uses wins as a tiebreaker when crumbs are equal, then player ID for stability.
      *
      * @return players sorted by crumb count descending
      */
@@ -134,22 +133,9 @@ public class MiniGameRushController {
             return new Player[0];
         }
         
-        // Create a copy and sort by crumbs descending, with wins as tiebreaker
+        // Create a copy and sort by crumbs descending
         Player[] sorted = players.clone();
-        java.util.Arrays.sort(sorted, (a, b) -> {
-            // Primary: more crumbs is better
-            int crumbCompare = Integer.compare(b.getCrumbs(), a.getCrumbs());
-            if (crumbCompare != 0) {
-                return crumbCompare;
-            }
-            // Tiebreaker 1: more wins is better
-            int winsCompare = Integer.compare(b.getWins(), a.getWins());
-            if (winsCompare != 0) {
-                return winsCompare;
-            }
-            // Tiebreaker 2: lower player ID for stable ordering
-            return Integer.compare(a.getID(), b.getID());
-        });
+        java.util.Arrays.sort(sorted, (a, b) -> Integer.compare(b.getCrumbs(), a.getCrumbs()));
         return sorted;
     }
     
@@ -160,4 +146,3 @@ public class MiniGameRushController {
         game.setScreen(new RushVictoryScreen(game, this));
     }
 }
-

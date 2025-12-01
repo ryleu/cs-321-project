@@ -14,9 +14,6 @@ public class PicnicPondBoard extends GameBoard {
     
     /** The display name for this board. */
     public static final String NAME = "Picnic Pond";
-    
-    /** Path to the background texture asset. */
-    private static final String BACKGROUND_PATH = "board/PicnicPond/background.png";
 
     /**
      * Constructs a new Picnic Pond board.
@@ -24,17 +21,7 @@ public class PicnicPondBoard extends GameBoard {
      * @param gameInstance the main game instance providing shared resources
      */
     public PicnicPondBoard(CritterParade gameInstance) {
-        super(gameInstance);
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
-    @Override
-    protected String getBackgroundPath() {
-        return BACKGROUND_PATH;
+        super(gameInstance, NAME, "board/PicnicPond/background.png");
     }
     
     @Override

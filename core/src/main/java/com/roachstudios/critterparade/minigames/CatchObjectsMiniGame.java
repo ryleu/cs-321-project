@@ -75,11 +75,6 @@ public class CatchObjectsMiniGame extends MiniGame {
     
     private boolean gameCompleted = false;
 
-    /**
-     * Constructs a new Catching Stars mini game.
-     *
-     * @param game shared game instance providing viewport, batch, and players
-     */
     public CatchObjectsMiniGame(CritterParade game) {
         super(game);
         
@@ -103,6 +98,8 @@ public class CatchObjectsMiniGame extends MiniGame {
     @Override
     public void show() {
         game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (other screens may have changed it)
+        game.getFont().getData().setScale(1.0f);
         
         // Reset game state
         gameTimer = 0f;
@@ -314,7 +311,6 @@ public class CatchObjectsMiniGame extends MiniGame {
 
     /**
      * Creates the placement array sorted by score (highest first).
-     * Uses player index as a tiebreaker for stable ordering when scores are equal.
      */
     private Player[] makePlacementArray() {
         int playerCount = getPlayerCount();
@@ -327,15 +323,8 @@ public class CatchObjectsMiniGame extends MiniGame {
             idx[i] = i;
         }
 
-        // Sort by score descending, with player index as tiebreaker for stability
-        java.util.Arrays.sort(idx, (a, b) -> {
-            int scoreCompare = Integer.compare(scores[b], scores[a]);
-            if (scoreCompare != 0) {
-                return scoreCompare;
-            }
-            // Tiebreaker: lower player index first for stable ordering
-            return Integer.compare(a, b);
-        });
+        // Sort by score descending
+        java.util.Arrays.sort(idx, (a, b) -> Integer.compare(scores[b], scores[a]));
 
         for (int i = 0; i < playerCount; i++) {
             ordered[i] = players[idx[i]];

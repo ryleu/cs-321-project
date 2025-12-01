@@ -30,10 +30,9 @@ import java.util.Random;
  *   <li>Shop tiles allow purchasing fruit with crumbs</li>
  * </ul>
  * 
- * <p>Subclasses must implement:
+ * <p>Subclasses must provide the board name and background path to the constructor,
+ * and implement:
  * <ul>
- *   <li>{@link #getName()} - the display name for the board</li>
- *   <li>{@link #getBackgroundPath()} - the path to the background texture</li>
  *   <li>{@link #createBoardTiles()} - defines tile positions and connections</li>
  *   <li>{@link #getThemeColors()} - returns board-specific color theme</li>
  * </ul>
@@ -64,19 +63,29 @@ public abstract class GameBoard implements Screen {
     /** Delay between movement steps in seconds. */
     protected static final float MOVE_DELAY = 0.3f;
     
+    /** The display name for this board. */
+    private final String name;
+    
+    /** Path to the background texture asset. */
+    private final String backgroundPath;
+    
     /**
      * Gets the display name for this game board.
      *
      * @return the display name for this game board
      */
-    public abstract String getName();
+    public String getName() {
+        return name;
+    }
     
     /**
      * Gets the file path to the background texture for this board.
      *
      * @return the path to the background texture asset
      */
-    protected abstract String getBackgroundPath();
+    protected String getBackgroundPath() {
+        return backgroundPath;
+    }
     
     /**
      * Creates and connects all board tiles. Subclasses should populate the
@@ -185,9 +194,13 @@ public abstract class GameBoard implements Screen {
      * Constructs a new game board.
      *
      * @param gameInstance the main game instance providing shared resources
+     * @param name the display name for this board
+     * @param backgroundPath the path to the background texture asset
      */
-    protected GameBoard(CritterParade gameInstance) {
+    protected GameBoard(CritterParade gameInstance, String name, String backgroundPath) {
         this.gameInstance = gameInstance;
+        this.name = name;
+        this.backgroundPath = backgroundPath;
         this.random = new Random();
         this.tiles = new ArrayList<>();
         this.junctionOptions = new ArrayList<>();
@@ -255,6 +268,8 @@ public abstract class GameBoard implements Screen {
         shapeRenderer = new ShapeRenderer();
         font = gameInstance.getFont();
         font.setUseIntegerPositions(false);
+        // Reset font scale (other screens may have changed it)
+        font.getData().setScale(1.0f);
         glyphLayout = new GlyphLayout();
         
         float w = Gdx.graphics.getWidth();

@@ -340,7 +340,7 @@ public abstract class MiniGame implements Screen {
             game.logMinigameEnd(getName(), names, crumbsAwarded);
         }
         
-        game.setScreen(new com.roachstudios.critterparade.menus.MiniGameResultScreen(game, placements));
+        game.setScreen(new com.roachstudios.critterparade.menus.MiniGameResultScreen(game, placements, crumbsAwarded));
     }
     
     /**
@@ -367,12 +367,18 @@ public abstract class MiniGame implements Screen {
     /**
      * Awards crumbs to players based on their placement in the minigame.
      * Points scale linearly from 5 (1st place) to 0 (last place), rounded down.
+     * Players with the same score receive the same crumbs (tied for the same placement).
      * Supports 2-6 players.
      * 
-     * Examples:
+     * Examples (no ties):
      * - 6 players: 5, 4, 3, 2, 1, 0
      * - 4 players: 5, 3, 1, 0
      * - 2 players: 5, 0
+     * 
+     * Example with ties (4 players, 1st and 2nd tie):
+     * - Player A and B tie for 1st: both get 5 crumbs
+     * - Player C is 3rd: gets 1 crumb
+     * - Player D is 4th: gets 0 crumbs
      *
      * @param placements players ordered from 1st to last place
      * @return array of crumbs awarded to each player, or empty array if invalid
@@ -385,11 +391,31 @@ public abstract class MiniGame implements Screen {
         int numPlayers = placements.length;
         int[] crumbsAwarded = new int[numPlayers];
         
-        // Award points based on placement: floor(5 * (numPlayers - placement) / (numPlayers - 1))
-        // placement is 1-indexed (1 = first place)
+        // Get scores for all players to detect ties
+        float[] scores = new float[numPlayers];
         for (int i = 0; i < numPlayers; i++) {
             if (placements[i] != null) {
-                int placement = i + 1; // Convert to 1-indexed
+                scores[i] = getScoreValue(placements[i]);
+            } else {
+                scores[i] = Float.MIN_VALUE; // Invalid players get lowest score
+            }
+        }
+        
+        // Award points based on placement, accounting for ties
+        // Players with the same score get the same crumbs (based on first occurrence)
+        for (int i = 0; i < numPlayers; i++) {
+            if (placements[i] != null) {
+                // Find the first index with the same score (for tie handling)
+                int firstTieIndex = i;
+                for (int j = 0; j < i; j++) {
+                    if (placements[j] != null && Float.compare(scores[j], scores[i]) == 0) {
+                        firstTieIndex = j;
+                        break;
+                    }
+                }
+                
+                // Use the placement of the first tied player
+                int placement = firstTieIndex + 1; // Convert to 1-indexed
                 int crumbs = (5 * (numPlayers - placement)) / (numPlayers - 1);
                 placements[i].addCrumbs(crumbs);
                 crumbsAwarded[i] = crumbs;
