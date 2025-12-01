@@ -33,6 +33,9 @@ public class MusicPlayer implements Disposable {
     
     private static final float DEFAULT_VOLUME = 0.5f;
     
+    // Reference to game instance for logging
+    private final CritterParade game;
+    
     // Music tracks
     private Music introMusic;
     private Music boardMusic;
@@ -47,8 +50,11 @@ public class MusicPlayer implements Disposable {
     
     /**
      * Creates a new MusicPlayer and loads all music tracks.
+     * 
+     * @param game the game instance for logging
      */
-    public MusicPlayer() {
+    public MusicPlayer(CritterParade game) {
+        this.game = game;
         loadTracks();
     }
     
@@ -82,6 +88,18 @@ public class MusicPlayer implements Disposable {
     }
     
     /**
+     * Logs a music change event.
+     * 
+     * @param theme the theme name
+     * @param action the action taken
+     */
+    private void logChange(String theme, String action) {
+        if (game != null) {
+            game.logMusicChange(theme, action);
+        }
+    }
+    
+    /**
      * Plays the specified music theme.
      * Stops any currently playing track before starting the new one.
      * 
@@ -100,6 +118,7 @@ public class MusicPlayer implements Disposable {
         
         if (currentTrack != null) {
             currentTrack.play();
+            logChange(theme.name(), "play");
         }
     }
     
@@ -162,6 +181,9 @@ public class MusicPlayer implements Disposable {
     public void stop() {
         if (currentTrack != null && currentTrack.isPlaying()) {
             currentTrack.stop();
+            if (currentTheme != null) {
+                logChange(currentTheme.name(), "stop");
+            }
         }
         currentTrack = null;
         currentTheme = null;
@@ -173,6 +195,9 @@ public class MusicPlayer implements Disposable {
     public void pause() {
         if (currentTrack != null && currentTrack.isPlaying()) {
             currentTrack.pause();
+            if (currentTheme != null) {
+                logChange(currentTheme.name(), "pause");
+            }
         }
     }
     
@@ -182,6 +207,9 @@ public class MusicPlayer implements Disposable {
     public void resume() {
         if (currentTrack != null && !currentTrack.isPlaying()) {
             currentTrack.play();
+            if (currentTheme != null) {
+                logChange(currentTheme.name(), "resume");
+            }
         }
     }
     
@@ -269,4 +297,3 @@ public class MusicPlayer implements Disposable {
         }
     }
 }
-

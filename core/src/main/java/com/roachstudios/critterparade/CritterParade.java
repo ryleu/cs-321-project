@@ -251,6 +251,18 @@ public class CritterParade extends Game {
         }
     }
     
+    /**
+     * Logs a music track change if logging is enabled.
+     *
+     * @param theme the music theme
+     * @param action the action taken (play, stop, pause, resume)
+     */
+    public void logMusicChange(String theme, String action) {
+        if (sessionLogger != null) {
+            sessionLogger.logMusicChange(theme, action);
+        }
+    }
+    
     // =========================================================================
     // Music Management
     // =========================================================================
@@ -324,7 +336,7 @@ public class CritterParade extends Game {
         registerMiniGame(CatchObjectsMiniGame.NAME, () -> new CatchObjectsMiniGame(this));
 
         // Initialize music player
-        musicPlayer = new MusicPlayer();
+        musicPlayer = new MusicPlayer(this);
 
         // Load settings and check for first run
         settings = new SettingsManager();
@@ -346,6 +358,30 @@ public class CritterParade extends Game {
      */
     public void render() {
         super.render();
+    }
+
+    /**
+     * Called when the application loses focus. Pauses music.
+     */
+    @Override
+    public void pause() {
+        super.pause();
+        log("Application lost focus");
+        if (musicPlayer != null) {
+            musicPlayer.pause();
+        }
+    }
+
+    /**
+     * Called when the application regains focus. Resumes music.
+     */
+    @Override
+    public void resume() {
+        super.resume();
+        log("Application regained focus");
+        if (musicPlayer != null) {
+            musicPlayer.resume();
+        }
     }
 
     /**
