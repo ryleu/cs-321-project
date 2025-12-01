@@ -11,9 +11,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
-import com.roachstudios.critterparade.minigames.MiniGame;
-
-import java.util.function.Supplier;
+import com.roachstudios.critterparade.minigames.MiniGameDescriptor;
 
 /**
  * Displays the mini game name and instructions before starting.
@@ -23,9 +21,7 @@ import java.util.function.Supplier;
 public class MiniGameInstructionScreen implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
-    private final Supplier<MiniGame> miniGameSupplier;
-    private final String gameName;
-    private final String instructions;
+    private final MiniGameDescriptor descriptor;
     
     /**
      * Tracks which players have pressed action (ready status).
@@ -62,17 +58,11 @@ public class MiniGameInstructionScreen implements Screen {
      * Constructs the mini game instruction screen.
      *
      * @param gameInstance shared game instance used for navigation and skin
-     * @param miniGameSupplier supplier that creates the mini game instance when ready to start
+     * @param descriptor the minigame descriptor containing name, instructions, and factory
      */
-    public MiniGameInstructionScreen(CritterParade gameInstance, Supplier<MiniGame> miniGameSupplier) {
+    public MiniGameInstructionScreen(CritterParade gameInstance, MiniGameDescriptor descriptor) {
         this.gameInstance = gameInstance;
-        this.miniGameSupplier = miniGameSupplier;
-        
-        // Create a temporary instance to get name and instructions
-        MiniGame tempGame = miniGameSupplier.get();
-        this.gameName = tempGame.getName();
-        this.instructions = tempGame.getInstructions();
-        tempGame.dispose();
+        this.descriptor = descriptor;
         
         // Initialize ready status
         int numPlayers = gameInstance.getNumPlayers();
@@ -92,27 +82,27 @@ public class MiniGameInstructionScreen implements Screen {
         root.pad(20);
 
         // Title - game name
-        Label titleLabel = new Label(gameName, gameInstance.skin);
+        Label titleLabel = new Label(descriptor.name(), gameInstance.getSkin());
         titleLabel.setAlignment(Align.center);
         root.add(titleLabel).fillX().padBottom(15);
         root.row();
 
         // Instructions
-        Label instructionsLabel = new Label(instructions, gameInstance.skin);
+        Label instructionsLabel = new Label(descriptor.instructions(), gameInstance.getSkin());
         instructionsLabel.setWrap(true);
         instructionsLabel.setAlignment(Align.center);
         root.add(instructionsLabel).width(500).fillX().padBottom(20);
         root.row();
         
         // Divider
-        Label divider = new Label("─────────────────────────────────", gameInstance.skin);
+        Label divider = new Label("─────────────────────────────────", gameInstance.getSkin());
         divider.setColor(Color.GRAY);
         divider.setAlignment(Align.center);
         root.add(divider).fillX().padBottom(10);
         root.row();
         
         // Ready prompt
-        Label readyPrompt = new Label("Press ACTION to Ready Up!", gameInstance.skin);
+        Label readyPrompt = new Label("Press ACTION to Ready Up!", gameInstance.getSkin());
         readyPrompt.setColor(Color.YELLOW);
         readyPrompt.setAlignment(Align.center);
         root.add(readyPrompt).fillX().padBottom(10);
@@ -121,7 +111,7 @@ public class MiniGameInstructionScreen implements Screen {
         // Player ready status labels
         Player[] players = gameInstance.getPlayers();
         for (int i = 0; i < players.length; i++) {
-            playerStatusLabels[i] = new Label(players[i].getName() + ": Waiting...", gameInstance.skin);
+            playerStatusLabels[i] = new Label(players[i].getName() + ": Waiting...", gameInstance.getSkin());
             playerStatusLabels[i].setColor(Color.GRAY);
             playerStatusLabels[i].setAlignment(Align.center);
             root.add(playerStatusLabels[i]).fillX();
@@ -129,14 +119,14 @@ public class MiniGameInstructionScreen implements Screen {
         }
         
         // Countdown label (hidden initially)
-        countdownLabel = new Label("", gameInstance.skin);
+        countdownLabel = new Label("", gameInstance.getSkin());
         countdownLabel.setColor(Color.YELLOW);
         countdownLabel.setAlignment(Align.center);
         root.add(countdownLabel).fillX().padTop(10);
         root.row();
         
         // Action key hints
-        Label hint = new Label("Action keys: E, Y, O, ], Space, Num9", gameInstance.skin);
+        Label hint = new Label("Action keys: E, Y, O, ], Space, Num9", gameInstance.getSkin());
         hint.setColor(Color.LIGHT_GRAY);
         hint.setAlignment(Align.center);
         root.add(hint).fillX().padTop(10);
@@ -204,11 +194,11 @@ public class MiniGameInstructionScreen implements Screen {
             gameInstance.startMinigameMusic();
             
             // Log minigame start
-            gameInstance.log("Starting minigame: %s", gameName);
-            gameInstance.logMinigameStart(gameName);
+            gameInstance.log("Starting minigame: %s", descriptor.name());
+            gameInstance.logMinigameStart(descriptor.name());
             
             // Create a fresh minigame instance and start it
-            gameInstance.setScreen(miniGameSupplier.get());
+            gameInstance.setScreen(descriptor.create());
         }
     }
 

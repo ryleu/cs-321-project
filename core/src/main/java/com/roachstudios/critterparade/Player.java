@@ -5,9 +5,10 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
+
 /**
  * Represents a player profile and input source. Tracks basic board resources
- * and exposes helper methods for reading input mapped by {@code playerID}.
+ * and exposes helper methods for reading input mapped by player ID.
  *
  * <p>Key mappings are intentionally hardcoded per ID to support same-keyboard
  * local play without a configuration UI. The layout spaces players across
@@ -15,59 +16,94 @@ import com.badlogic.gdx.math.Rectangle;
  */
 public class Player {
     
+    /**
+     * Input action types for player controls.
+     */
+    private enum InputAction {
+        UP, DOWN, LEFT, RIGHT, ACTION
+    }
+    
+    /**
+     * Key mappings for each player (indexed by player ID - 1).
+     * Each sub-array contains keys for [UP, DOWN, LEFT, RIGHT, ACTION].
+     */
+    private static final int[][] KEY_MAPPINGS = {
+        // Player 1: WASD + E
+        {Input.Keys.W, Input.Keys.S, Input.Keys.A, Input.Keys.D, Input.Keys.E},
+        // Player 2: TFGH + Y
+        {Input.Keys.T, Input.Keys.G, Input.Keys.F, Input.Keys.H, Input.Keys.Y},
+        // Player 3: IJKL + O
+        {Input.Keys.I, Input.Keys.K, Input.Keys.J, Input.Keys.L, Input.Keys.O},
+        // Player 4: Bracket cluster
+        {Input.Keys.LEFT_BRACKET, Input.Keys.APOSTROPHE, Input.Keys.SEMICOLON, Input.Keys.ENTER, Input.Keys.RIGHT_BRACKET},
+        // Player 5: Arrow keys + Space
+        {Input.Keys.UP, Input.Keys.DOWN, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.SPACE},
+        // Player 6: Numpad
+        {Input.Keys.NUMPAD_8, Input.Keys.NUMPAD_5, Input.Keys.NUMPAD_4, Input.Keys.NUMPAD_6, Input.Keys.NUMPAD_9}
+    };
+    
     private int fruit;
     private int crumbs;
     private int numMGWins; 
     
-    private int playerID;
-    private String name;
-    private Texture playerTex;
-    private Sprite playerSprite;
-    private Rectangle bounds;
+    private final int playerID;
+    private final String name;
+    private final Texture playerTex;
+    private final Sprite playerSprite;
+    private final Rectangle bounds;
+    
+    /** Key codes for this player's controls, indexed by InputAction ordinal. */
+    private final int[] keyBindings;
     
     // Board game state
     private int boardTileIndex = 0;
     private int previousTileIndex = -1;
-   
 
-    
     /**
      * Constructs a new player with the given ID, name, and sprite texture.
      *
      * @param id unique player ID in [1..6] used for input mapping
      * @param name display name for the critter (e.g., "Bumble Bee")
      * @param tex sprite texture representing the player
+     * @throws IllegalArgumentException if id is not in range [1..6]
      */
     public Player(int id, String name, Texture tex) {
+        if (id < 1 || id > 6) {
+            throw new IllegalArgumentException("Player ID must be between 1 and 6, got: " + id);
+        }
+        
         this.fruit = 0;
         this.crumbs = 0;
         this.playerID = id;
         this.name = name;
-        this.numMGWins = 0;  
+        this.numMGWins = 0;
+        
+        // Copy key bindings for this player
+        this.keyBindings = KEY_MAPPINGS[id - 1].clone();
 
         this.playerTex = tex;
         this.playerSprite = new Sprite(playerTex);
         this.playerSprite.setSize(1, 1);
         this.bounds = new Rectangle(this.playerSprite.getX(), this.playerSprite.getY(), 1, 1);
-        
-        
-        
     }
+    
+    // =========================================================================
+    // Score Management
+    // =========================================================================
     
     /**
      * Increments fruit count by one.
      */
-    public void addFruit(){
+    public void addFruit() {
         this.fruit++;
     }
     
     /**
      * Decrements fruit count and clamps at zero.
      */
-    public void subFruit(){
+    public void subFruit() {
         this.fruit--;
-        
-        if(this.fruit < 0){
+        if (this.fruit < 0) {
             this.fruit = 0;
         }
     }
@@ -97,8 +133,7 @@ public class Player {
      */
     public void subCrumbs(int numToSub) {
         this.crumbs -= numToSub;
-        
-        if(this.crumbs < 0){
+        if (this.crumbs < 0) {
             this.crumbs = 0;
         }
     }
@@ -115,7 +150,7 @@ public class Player {
     /**
      * Increments mini-game win counter.
      */
-    public void addWin(){
+    public void addWin() {
         this.numMGWins++;
     }
     
@@ -153,6 +188,7 @@ public class Player {
     
     /**
      * Sets the player's current tile index on the board.
+     *
      * @param index the tile index
      */
     public void setBoardTileIndex(int index) {
@@ -170,6 +206,7 @@ public class Player {
     
     /**
      * Sets the previous tile index (for junction direction tracking).
+     *
      * @param index the previous tile index
      */
     public void setPreviousTileIndex(int index) {
@@ -178,12 +215,17 @@ public class Player {
     
     /**
      * Resets board position to starting state.
+     *
      * @param startTileIndex the starting tile index
      */
     public void resetBoardPosition(int startTileIndex) {
         this.boardTileIndex = startTileIndex;
         this.previousTileIndex = -1;
     }
+    
+    // =========================================================================
+    // Identity and Sprite Access
+    // =========================================================================
     
     /**
      * Gets the player's ID used for input mapping.
@@ -219,7 +261,39 @@ public class Player {
      */
     public void setSpriteSize(float size) {
         this.playerSprite.setSize(size, size);
-        
+    }
+    
+    /**
+     * Gets the bounds rectangle for collision detection.
+     *
+     * @return the bounds rectangle
+     */
+    public Rectangle getBounds() {
+        return this.bounds;
+    }
+    
+    // =========================================================================
+    // Input Handling
+    // =========================================================================
+    
+    /**
+     * Checks if a specific key for this player is currently pressed.
+     *
+     * @param action the input action to check
+     * @return true if the mapped key is held
+     */
+    private boolean isKeyPressed(InputAction action) {
+        return Gdx.input.isKeyPressed(keyBindings[action.ordinal()]);
+    }
+    
+    /**
+     * Checks if a specific key for this player was just pressed this frame.
+     *
+     * @param action the input action to check
+     * @return true if the mapped key was just pressed
+     */
+    private boolean isKeyJustPressed(InputAction action) {
+        return Gdx.input.isKeyJustPressed(keyBindings[action.ordinal()]);
     }
     
     /**
@@ -228,42 +302,7 @@ public class Player {
      * @return true while the mapped "Up" key is held for this player
      */
     public boolean isPressingUp() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyPressed(Input.Keys.W)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyPressed(Input.Keys.T)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyPressed(Input.Keys.I)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyPressed(Input.Keys.UP)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyPressed(InputAction.UP);
     }
     
     /**
@@ -272,42 +311,7 @@ public class Player {
      * @return true on the frame the mapped "Up" key is pressed
      */
     public boolean justPressedUp() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.W)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.T)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.I)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT_BRACKET)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.UP)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_8)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyJustPressed(InputAction.UP);
     }
     
     /**
@@ -316,42 +320,7 @@ public class Player {
      * @return true while the mapped "Left" key is held for this player
      */
     public boolean isPressingLeft() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyPressed(Input.Keys.A)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyPressed(Input.Keys.F)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyPressed(Input.Keys.J)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyPressed(Input.Keys.SEMICOLON)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyPressed(Input.Keys.NUMPAD_4)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyPressed(InputAction.LEFT);
     }
     
     /**
@@ -360,86 +329,16 @@ public class Player {
      * @return true on the frame the mapped "Left" key is pressed
      */
     public boolean justPressedLeft() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.A)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.F)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.J)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.SEMICOLON)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_4)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyJustPressed(InputAction.LEFT);
     }
-     
+    
     /**
      * Checks if the player is pressing down.
      *
      * @return true while the mapped "Down" key is held for this player
      */
     public boolean isPressingDown() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyPressed(Input.Keys.S)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyPressed(Input.Keys.G)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyPressed(Input.Keys.K)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyPressed(Input.Keys.APOSTROPHE)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyPressed(Input.Keys.DOWN)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyPressed(Input.Keys.NUMPAD_5)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyPressed(InputAction.DOWN);
     }
     
     /**
@@ -448,42 +347,7 @@ public class Player {
      * @return true on the frame the mapped "Down" key is pressed
      */
     public boolean justPressedDown() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.S)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.G)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.K)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.APOSTROPHE)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_5)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyJustPressed(InputAction.DOWN);
     }
     
     /**
@@ -492,42 +356,7 @@ public class Player {
      * @return true while the mapped "Right" key is held for this player
      */
     public boolean isPressingRight() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyPressed(Input.Keys.D)){
-                    return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyPressed(Input.Keys.H)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyPressed(Input.Keys.L)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyPressed(Input.Keys.ENTER)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyPressed(Input.Keys.NUMPAD_6)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyPressed(InputAction.RIGHT);
     }
     
     /**
@@ -536,86 +365,16 @@ public class Player {
      * @return true on the frame the mapped "Right" key is pressed
      */
     public boolean justPressedRight() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.D)){
-                    return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.H)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.L)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_6)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyJustPressed(InputAction.RIGHT);
     }
-       
+    
     /**
      * Checks if the player is pressing action.
      *
      * @return true while the mapped "Action" key is held for this player
      */
     public boolean isPressingAction() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyPressed(Input.Keys.E)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyPressed(Input.Keys.Y)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyPressed(Input.Keys.O)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyPressed(Input.Keys.RIGHT_BRACKET)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyPressed(Input.Keys.NUMPAD_9)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
+        return isKeyPressed(InputAction.ACTION);
     }
     
     /**
@@ -624,50 +383,6 @@ public class Player {
      * @return true on the frame the mapped "Action" key is pressed
      */
     public boolean justPressedAction() {
-        switch(this.playerID){
-            case 1:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.E)){
-                   return true; 
-                }
-                break;
-            case 2:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.Y)){
-                    return true;
-                }
-                break;
-            case 3:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.O)){
-                    return true;
-                }
-                break;
-            case 4:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)){
-                    return true;
-                }
-                break;
-            case 5:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
-                    return true;
-                }
-                break;
-            case 6:
-                if(Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_9)){
-                    return true;
-                }
-                break;
-            default:
-                System.out.println("INPUT ERROR: THE ID FOR THIS CHARACTER IS SET WRONG!!!");
-                
-        }
-        return false;
-    }
-    
-    /**
-     * Gets the bounds rectangle.
-     *
-     * @return the bounds rectangle.
-     */
-    public Rectangle getBounds(){
-        return this.bounds;
+        return isKeyJustPressed(InputAction.ACTION);
     }
 }

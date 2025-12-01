@@ -36,23 +36,23 @@ public class BoardSelectMenu implements Screen {
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override
     /**
      * Builds the simple list UI with a title and one button per board option.
      */
+    @Override
     public void show() {
         Table root = new Table();
         stage.addActor(root);
         root.setFillParent(true);
 
-        Label title = new Label("Select a Board", gameInstance.skin);
+        Label title = new Label("Select a Board", gameInstance.getSkin());
         title.setAlignment(Align.center);
 
         root.add(title).expandX().fillX().padBottom(20);
 
         for (NamedSupplier<GameBoard> namedBoard : gameInstance.getGameBoards()) {
             root.row();
-            TextButton changeButton = new TextButton(namedBoard.name(), gameInstance.skin);
+            TextButton changeButton = new TextButton(namedBoard.name(), gameInstance.getSkin());
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -67,10 +67,12 @@ public class BoardSelectMenu implements Screen {
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
-    @Override
     /**
      * Clears the screen and renders the stage.
+     *
+     * @param delta time since last frame
      */
+    @Override
     public void render(float delta) {
         // Clear each frame; scene2d does not clear automatically.
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
@@ -80,10 +82,13 @@ public class BoardSelectMenu implements Screen {
         stage.draw();
     }
 
-    @Override
     /**
      * Keeps the virtual size consistent and centers the camera on resize.
+     *
+     * @param width new window width
+     * @param height new window height
      */
+    @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }

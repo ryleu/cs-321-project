@@ -7,25 +7,117 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
-import com.roachstudios.critterparade.minigames.minigameprops.dodgeBall;
+import com.roachstudios.critterparade.minigames.minigameprops.DodgeBall;
+
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- *
+ * A survival minigame where players dodge incoming balls from all directions.
  * 
+ * <p>Players move freely around the arena while balls spawn from the edges
+ * and travel across the screen. Contact with a ball eliminates the player.
+ * The last player standing wins.</p>
+ * 
+ * <p>Ball spawn rate increases over time to ensure the game eventually ends.</p>
  */
 public class DodgeBallMiniGame extends MiniGame {
     
     /** The display name for this mini game. */
     public static final String NAME = "Dodgeball";
+    
     /** Instructions explaining how to play this mini game. */
     public static final String INSTRUCTIONS = 
         "Don't let the balls touch you!\n\n" +
         "Use your DIRECTIONAL inputs to move around.\n" +
         "Last player standing wins!";
+    
+    /** Background texture path. */
+    private static final String BACKGROUND_PATH = "MiniGames/SimpleRacer/Clouds.png";
+    
+    /** Elimination marker texture path. */
+    private static final String OUT_MARKER_PATH = "MiniGames/DodgeBall/X.png";
+    
+    /** Player movement speed in world units per second. */
+    private static final float PLAYER_SPEED = 4f;
+    
+    /** Ball movement speed in world units per second. */
+    private static final float BALL_SPEED = 4f;
+    
+    /** Size of player sprites in world units. */
+    private static final float PLAYER_SIZE = 1.0f;
+    
+    /** Random number generator for ball spawning. */
+    private final Random random = new Random();
+    
+    private Texture backgroundTex;
+    private Texture playerOutTex;
+    
+    /** Tracks whether each player has been eliminated. */
+    private boolean[] playerEliminated;
+    
+    /** Ordered list of players as they are eliminated (last place first). */
+    private Player[] placement;
+    
+    /** Number of players still alive (used as index for placement array). */
+    private int remainingPlayers;
+    
+    /** Prevents onGameComplete from being called multiple times. */
+    private boolean gameCompleted;
+    
+    /** Active balls currently on screen. */
+    private final List<DodgeBall> activeBalls = new ArrayList<>();
+    
+    /** Elimination markers for eliminated players. */
+    private final List<Sprite> outMarkers = new ArrayList<>();
+    
+    /** Time elapsed since game start. */
+    private float timeElapsed = 0f;
+    
+    /** Cooldown timer until next ball spawn. */
+    private float spawnCooldown = 1f;
+    
+    /** Survival time for each player (index = player array index). */
+    private float[] survivalTimes;
+    
+    /**
+     * Constructs a new Dodgeball mini game.
+     *
+     * @param game shared game instance providing viewport, batch, and players
+     */
+    public DodgeBallMiniGame(CritterParade game) {
+        super(game);
+        
+        int playerCount = getPlayerCount();
+        placement = new Player[playerCount];
+        playerEliminated = new boolean[playerCount];
+        survivalTimes = new float[playerCount];
+        remainingPlayers = playerCount - 1;
+        gameCompleted = false;
+        
+        backgroundTex = new Texture(BACKGROUND_PATH);
+        playerOutTex = new Texture(OUT_MARKER_PATH);
+        
+        initializePlayerPositions();
+    }
+    
+    /**
+     * Sets up initial positions and sizes for all players.
+     */
+    private void initializePlayerPositions() {
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            Player player = players[i];
+            player.setSpriteSize(PLAYER_SIZE);
+            player.getSprite().setX(4);
+            player.getSprite().setY(4);
+            updatePlayerBounds(player);
+            playerEliminated[i] = false;
+            survivalTimes[i] = -1f;
+        }
+    }
     
     @Override
     public String getName() {
@@ -39,7 +131,6 @@ public class DodgeBallMiniGame extends MiniGame {
     
     @Override
     public float getScoreValue(Player player) {
-        // Find the player's index and return their survival time
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
             if (players[i] == player) {
@@ -49,138 +140,68 @@ public class DodgeBallMiniGame extends MiniGame {
         return -1f;
     }
     
-    private Texture backgroundTex;
-    private Texture playerOutTex;
-
-    
-    private final float playerSize = 1.0f;
-    
-    /**
-     * Tracks whether each player has crossed the finish line.
-     * Index corresponds to player array index (0-based).
-     */
-    private boolean[] playerFinished;
-    
-    /**
-     * Ordered list of players as they finish (1st place to last).
-     */
-    private Player[] placement;
-    private int haventFinished;
-    
-    /**
-     * Prevents onGameComplete from being called multiple times.
-     */
-    private boolean gameCompleted;
-    
-    private List<dodgeBall> activeBalls = new ArrayList<>();
-    private List<Sprite> outSprites = new ArrayList<>();
-    
-    private float timeElapsed = 0f;
-    private float coolDown = 1f;
-    
-    /**
-     * Tracks the survival time for each player (index = player array index).
-     * -1 means the player is still alive.
-     */
-    private float[] survivalTimes;
-    
-    /**
-     * Constructs a new Simple Racer mini game.
-     *
-     * @param game shared game instance providing viewport, batch, and players
-     */
-    public DodgeBallMiniGame(CritterParade game) {
-        super(game);
-        
-        int playerCount = getPlayerCount();
-        placement = new Player[playerCount];
-        playerFinished = new boolean[playerCount];
-        survivalTimes = new float[playerCount];
-        haventFinished = playerCount - 1;
-        gameCompleted = false;
-        
-        backgroundTex = new Texture("MiniGames/SimpleRacer/Clouds.png");
-        playerOutTex = new Texture("MiniGames/DodgeBall/X.png");
-
-        
-        // Set up initial positions and sizes for all players######################################################################################
-        Player[] players = getPlayers();
-        for (int i = 0; i < playerCount; i++) {
-            Player player = players[i];
-            player.setSpriteSize(playerSize);
-            player.getSprite().setX(4);
-            player.getSprite().setY(4);
-            clampBounds(player);
-            playerFinished[i] = false;
-            survivalTimes[i] = -1f; // -1 means still alive
-        }
-    }
-    
     @Override
     public void show() {
-        // Update viewport to current screen size
-        game.viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         
-        // Reset game state in case we're replaying
-        haventFinished = getPlayerCount() - 1;
+        remainingPlayers = getPlayerCount() - 1;
         gameCompleted = false;
         timeElapsed = 0f;
-        for (int i = 0; i < playerFinished.length; i++) {
-            playerFinished[i] = false;
+        activeBalls.clear();
+        outMarkers.clear();
+        
+        for (int i = 0; i < playerEliminated.length; i++) {
+            playerEliminated[i] = false;
             placement[i] = null;
             survivalTimes[i] = -1f;
         }
         
-        // Reset positions and sizes when the minigame is shown
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
-            players[i].setSpriteSize(playerSize);
-            players[i].getSprite().setPosition((playerSize * i) + 4, 4);
+            players[i].setSpriteSize(PLAYER_SIZE);
+            players[i].getSprite().setPosition((PLAYER_SIZE * i) + 4, 4);
         }
     }
 
     @Override
     public void render(float delta) {
-        input();
-        logic(delta);
+        handleInput();
+        updateLogic(delta);
         draw();
     }
 
     /**
-     * Reads player inputs and translates them into movement when allowed.
+     * Reads player inputs and translates them into movement.
      */
-    private void input() {
-        float speed = 4f;
+    private void handleInput() {
         float delta = Gdx.graphics.getDeltaTime();
         
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
-            if (!playerFinished[i]) {
+            if (!playerEliminated[i]) {
                 Player player = players[i];
-                // Players advance by pressing their right input
                 if (player.isPressingRight()) {
-                    player.getSprite().translateX(speed * delta);
-                }
-                else if (player.isPressingLeft()) {
-                    player.getSprite().translateX(-speed * delta);
+                    player.getSprite().translateX(PLAYER_SPEED * delta);
+                } else if (player.isPressingLeft()) {
+                    player.getSprite().translateX(-PLAYER_SPEED * delta);
                 }
                 if (player.isPressingUp()) {
-                    player.getSprite().translateY(speed * delta);
-                }
-                else if (player.isPressingDown()) {
-                    player.getSprite().translateY(-speed * delta);
+                    player.getSprite().translateY(PLAYER_SPEED * delta);
+                } else if (player.isPressingDown()) {
+                    player.getSprite().translateY(-PLAYER_SPEED * delta);
                 }
             }
         }
     }
     
     /**
-     * Clamps sprites to the world bounds and records finish order once a 
-     * player crosses the line at x=14 in world units.
+     * Updates game state including player bounds, ball spawning, and collisions.
+     *
+     * @param delta time since last frame in seconds
      */
-    private void logic(float delta) {
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+    private void updateLogic(float delta) {
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
         
         Player[] players = getPlayers();
         float playerWidth = players[0].getSprite().getWidth();
@@ -189,97 +210,93 @@ public class DodgeBallMiniGame extends MiniGame {
         for (int i = 0; i < players.length; i++) {
             Player player = players[i];
             
-            if(!isOnOutList(player)){
-                clampX(player, playerWidth, worldWidth);
-                clampY(player, playerHeight, worldHeight);
+            if (!isPlayerEliminated(player)) {
+                clampPlayerPosition(player, playerWidth, playerHeight, worldWidth, worldHeight);
             }
             
-            clampBounds(player);
+            updatePlayerBounds(player);
             
-            // Check if player was eliminated
-            if (checkIfOut(player) && !playerFinished[i]) {
-                playerFinished[i] = true;
-                survivalTimes[i] = timeElapsed; // Record survival time
-                placement[haventFinished] = player;
-                haventFinished--;
+            if (checkPlayerHit(player) && !playerEliminated[i]) {
+                eliminatePlayer(i, player);
             }
-            
         }
         
         timeElapsed += delta;
-        if(coolDown <= 0){
-            spawnBall(activeBalls);
-            resetCoolDown();
-        }
-        else{
-            coolDown -= delta;
+        spawnCooldown -= delta;
+        
+        if (spawnCooldown <= 0) {
+            spawnBall();
+            updateSpawnCooldown();
         }
         
-        moveBalls(4);
-        
+        updateBalls();
         checkGameComplete();
     }
     
     /**
-     * Renders the background, finish line, and all player sprites.###################################################################################
+     * Eliminates a player from the game.
+     *
+     * @param playerIndex index in the players array
+     * @param player the player to eliminate
      */
-    private void draw() {
-        ScreenUtils.clear(1f, 0.992f, 0.816f, 1f);
-        game.viewport.apply();
-        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        game.batch.begin();
+    private void eliminatePlayer(int playerIndex, Player player) {
+        playerEliminated[playerIndex] = true;
+        survivalTimes[playerIndex] = timeElapsed;
+        placement[remainingPlayers] = player;
+        remainingPlayers--;
         
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
-        
-        game.batch.draw(backgroundTex, 0, 0, worldWidth, worldHeight);
-        
-        // Draw all player sprites
-        Player[] players = getPlayers();
-        for (Player player : players) {
-            player.getSprite().draw(game.batch);
-        }
-        
-        for (dodgeBall ball : activeBalls){
-            ball.getSprite().draw(game.batch);
-        }
-        
-        if (!outSprites.isEmpty()){
-            for (Sprite sprite : outSprites)
-            {
-                sprite.draw(game.batch);
-            }
-        }
-        
-        game.batch.end();
+        createOutMarker(player);
+        player.getSprite().setPosition(-10, -10);
     }
     
     /**
-     * Checks if all players have finished and triggers game completion.
+     * Renders the game state.
+     */
+    private void draw() {
+        ScreenUtils.clear(1f, 0.992f, 0.816f, 1f);
+        game.getViewport().apply();
+        game.getBatch().setProjectionMatrix(game.getViewport().getCamera().combined);
+        game.getBatch().begin();
+        
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
+        
+        game.getBatch().draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        
+        Player[] players = getPlayers();
+        for (Player player : players) {
+            player.getSprite().draw(game.getBatch());
+        }
+        
+        for (DodgeBall ball : activeBalls) {
+            ball.getSprite().draw(game.getBatch());
+        }
+        
+        for (Sprite marker : outMarkers) {
+            marker.draw(game.getBatch());
+        }
+        
+        game.getBatch().end();
+    }
+    
+    /**
+     * Checks if the game should end and triggers completion.
      */
     private void checkGameComplete() {
-        // The game ends when we are ready to place the 1st place winner (index 0)
-        if (!gameCompleted && haventFinished == 0) {
-            
-            // Find the single player who hasn't finished yet
+        if (!gameCompleted && remainingPlayers == 0) {
             Player winner = null;
             Player[] players = getPlayers();
             for (int i = 0; i < players.length; i++) {
-                if (!playerFinished[i]) {
+                if (!playerEliminated[i]) {
                     winner = players[i];
-                    // Mark them as finished (optional, but good practice)
-                    playerFinished[i] = true;
-                    // Winner gets the current time as their survival time
+                    playerEliminated[i] = true;
                     survivalTimes[i] = timeElapsed;
                     break;
                 }
             }
             
-            // Place the winner in the final available spot (1st place)
             placement[0] = winner;
-            
-            // Update the state variables
-            haventFinished--; // Decrement to -1 to signal completion state
+            remainingPlayers--;
             onGameComplete(placement);
             gameCompleted = true;
         }
@@ -290,184 +307,205 @@ public class DodgeBallMiniGame extends MiniGame {
         if (backgroundTex != null) {
             backgroundTex.dispose();
         }
+        if (playerOutTex != null) {
+            playerOutTex.dispose();
+        }
+        for (DodgeBall ball : activeBalls) {
+            ball.dispose();
+        }
     }
     
-    private dodgeBall createBall(int startX, int startY, int direction){
-        dodgeBall newBall = new dodgeBall();
-        newBall.getSprite().setX(startX);
-        newBall.getSprite().setY(startY);
-        newBall.getBounds().setX(startX);
-        newBall.getBounds().setY(startY);
-        newBall.changeDirection(direction);
-        return newBall;
+    /**
+     * Creates a new ball at the specified position with the given direction.
+     *
+     * @param startX starting X position
+     * @param startY starting Y position
+     * @param direction movement direction (0=up, 1=down, 2=left, 3=right)
+     * @return the created DodgeBall
+     */
+    private DodgeBall createBall(int startX, int startY, int direction) {
+        DodgeBall ball = new DodgeBall();
+        ball.getSprite().setPosition(startX, startY);
+        ball.getBounds().setPosition(startX, startY);
+        ball.setDirection(direction);
+        return ball;
     }
     
-    private void spawnBall(List<dodgeBall> ballList){
-        int direction = getRandomDirection();
+    /**
+     * Spawns a ball from a random edge with a random direction.
+     */
+    private void spawnBall() {
+        int direction = random.nextInt(4);
         
-        if(direction == 0){
-            ballList.add(createBall(getRandomSpawn(true), 0, direction));
-        }
-        if(direction == 1){
-            ballList.add(createBall(getRandomSpawn(true), 8, direction));
-        }
-        if(direction == 2){
-            ballList.add(createBall(15, getRandomSpawn(false), direction));
-        }
-        if(direction == 3){
-            ballList.add(createBall(0, getRandomSpawn(false), direction));
+        switch (direction) {
+            case 0: // Moving up, spawn from bottom
+                activeBalls.add(createBall(getRandomSpawnX(), 0, direction));
+                break;
+            case 1: // Moving down, spawn from top
+                activeBalls.add(createBall(getRandomSpawnX(), 8, direction));
+                break;
+            case 2: // Moving left, spawn from right
+                activeBalls.add(createBall(15, getRandomSpawnY(), direction));
+                break;
+            case 3: // Moving right, spawn from left
+                activeBalls.add(createBall(0, getRandomSpawnY(), direction));
+                break;
+            default:
+                break;
         }
     }
     
-    private void moveBalls(float speed){
+    /**
+     * Updates all ball positions and removes off-screen balls.
+     */
+    private void updateBalls() {
         float delta = Gdx.graphics.getDeltaTime();
+        float speed = BALL_SPEED * delta;
         
-        Iterator<dodgeBall> iterator = activeBalls.iterator();
-        
-
-        while (iterator.hasNext()){
-
-            dodgeBall ball = iterator.next();
+        Iterator<DodgeBall> iterator = activeBalls.iterator();
+        while (iterator.hasNext()) {
+            DodgeBall ball = iterator.next();
             
             switch (ball.getDirection()) {
-                case 0:
-                    moveBallUp(ball, speed * delta);
-                    if(ball.getSprite().getY() > game.viewport.getWorldHeight()){
+                case 0: // Up
+                    ball.move(0, speed);
+                    if (ball.getSprite().getY() > game.getViewport().getWorldHeight()) {
                         iterator.remove();
-                    }   break;
-                case 1:
-                    moveBallDown(ball, speed * delta);
-                    if(ball.getSprite().getY() < -1){
+                    }
+                    break;
+                case 1: // Down
+                    ball.move(0, -speed);
+                    if (ball.getSprite().getY() < -1) {
                         iterator.remove();
-                    }   break;
-                case 2:
-                    moveBallLeft(ball, speed * delta);
-                    if(ball.getSprite().getX() < -1){
-                        iterator.remove(); 
-                    }   break;
-                case 3:
-                    moveBallRight(ball, speed * delta);
-                    if(ball.getSprite().getX() > game.viewport.getWorldWidth()){
-                        iterator.remove(); 
-                    }   break;
+                    }
+                    break;
+                case 2: // Left
+                    ball.move(-speed, 0);
+                    if (ball.getSprite().getX() < -1) {
+                        iterator.remove();
+                    }
+                    break;
+                case 3: // Right
+                    ball.move(speed, 0);
+                    if (ball.getSprite().getX() > game.getViewport().getWorldWidth()) {
+                        iterator.remove();
+                    }
+                    break;
                 default:
                     break;
             }
         }
     }
     
-    private void moveBallUp(dodgeBall ball, float speed){
-        ball.moveBall(0, speed);
+    /**
+     * Creates an elimination marker at the player's last position.
+     *
+     * @param player the eliminated player
+     */
+    private void createOutMarker(Player player) {
+        Sprite marker = new Sprite(playerOutTex);
+        marker.setSize(1, 1);
+        marker.setPosition(player.getSprite().getX(), player.getSprite().getY());
+        outMarkers.add(marker);
     }
     
-    private void moveBallDown(dodgeBall ball, float speed){
-        ball.moveBall(0, -speed);
-    }
-    
-    private void moveBallLeft(dodgeBall ball, float speed){
-        ball.moveBall(-speed, 0);
-    }
-    
-    private void moveBallRight(dodgeBall ball, float speed){
-        ball.moveBall(speed, 0);
-    }
-    
-    
-    private void createOutSprite(Player player){
-        Sprite newOutSprite = new Sprite(playerOutTex);
-        newOutSprite.setSize(1, 1);
-        newOutSprite.setX(player.getSprite().getX());
-        newOutSprite.setY(player.getSprite().getY());
-        outSprites.add(newOutSprite);
-    }
-    
-    private boolean checkIfOut(Player player){
-        for (dodgeBall ball : activeBalls){
-                if(player.getBounds().overlaps(ball.getBounds()) && !isOnOutList(player)){
-                    createOutSprite(player);
-                    activeBalls.remove(ball);
-                    player.getSprite().setX(-10);
-                    player.getSprite().setY(-10);
-                    return true;
-                }
-                
-            }
-        return false;
-    } 
-    
-    private boolean isOnOutList(Player playerInput){
-        if(playerFinished.length != 0){
-            for(Player player : placement){
-                if(playerInput == player){
-                    return true;
-                }
+    /**
+     * Checks if a player was hit by any ball.
+     *
+     * @param player the player to check
+     * @return true if the player was hit
+     */
+    private boolean checkPlayerHit(Player player) {
+        for (DodgeBall ball : activeBalls) {
+            if (player.getBounds().overlaps(ball.getBounds()) && !isPlayerEliminated(player)) {
+                activeBalls.remove(ball);
+                return true;
             }
         }
         return false;
     }
     
-    private int getRandomDirection(){
-        Random random = new Random();
-        return random.nextInt(4);
+    /**
+     * Checks if a player has been eliminated.
+     *
+     * @param playerInput the player to check
+     * @return true if the player is eliminated
+     */
+    private boolean isPlayerEliminated(Player playerInput) {
+        for (Player player : placement) {
+            if (playerInput == player) {
+                return true;
+            }
+        }
+        return false;
     }
     
-    private int getRandomSpawn(Boolean isX){
-        Random random = new Random();
-        int min = 1;
-        int max;
-        
-        if(isX){
-            max = 14;
-            return random.nextInt(max - min + 1) + min;
-        }
-        else{
-            max = 7;
-            return random.nextInt(max - min + 1) + min;
+    /**
+     * Gets a random X spawn position.
+     *
+     * @return random X coordinate between 1 and 14
+     */
+    private int getRandomSpawnX() {
+        return random.nextInt(14) + 1;
+    }
+    
+    /**
+     * Gets a random Y spawn position.
+     *
+     * @return random Y coordinate between 1 and 7
+     */
+    private int getRandomSpawnY() {
+        return random.nextInt(7) + 1;
+    }
+    
+    /**
+     * Updates spawn cooldown based on elapsed time (difficulty scaling).
+     */
+    private void updateSpawnCooldown() {
+        if (timeElapsed < 5) {
+            spawnCooldown = 0.6f;
+        } else if (timeElapsed < 10) {
+            spawnCooldown = 0.5f;
+        } else if (timeElapsed < 15) {
+            spawnCooldown = 0.4f;
+        } else if (timeElapsed < 20) {
+            spawnCooldown = 0.3f;
+        } else if (timeElapsed < 25) {
+            spawnCooldown = 0.2f;
+        } else {
+            spawnCooldown = 0.1f;
         }
     }
     
-    private void resetCoolDown(){
-        if(timeElapsed < 5){
-            coolDown = 0.6f;
-        }
-        else if(5 <= timeElapsed && timeElapsed < 10){
-            coolDown = 0.5f;
-        }
-        else if(10 <= timeElapsed && timeElapsed < 15){
-            coolDown = 0.4f;
-        }
-        else if(15 <= timeElapsed && timeElapsed < 20){
-            coolDown = 0.3f;
-        }
-        else if(20 <= timeElapsed && timeElapsed < 25){
-            coolDown = 0.2f;
-        }
-        else if(25 <= timeElapsed){
-            coolDown = 0.1f;
-        }
+    /**
+     * Clamps player position within world bounds.
+     *
+     * @param player the player to clamp
+     * @param playerWidth player sprite width
+     * @param playerHeight player sprite height
+     * @param worldWidth world width
+     * @param worldHeight world height
+     */
+    private void clampPlayerPosition(Player player, float playerWidth, float playerHeight,
+                                     float worldWidth, float worldHeight) {
+        player.getSprite().setX(MathUtils.clamp(
+            player.getSprite().getX(), 
+            playerWidth, 
+            worldWidth - (2 * playerWidth)
+        ));
+        player.getSprite().setY(MathUtils.clamp(
+            player.getSprite().getY(), 
+            playerHeight, 
+            worldHeight - (2 * playerHeight)
+        ));
     }
     
-    private void clampX(Player player, float playerWidth, float worldWidth){
-        // Clamp X position
-            player.getSprite().setX(MathUtils.clamp(
-                player.getSprite().getX(), 
-                playerWidth, 
-                worldWidth - (2 * playerWidth)
-            ));
-    }
-    private void clampY(Player player, float playerHeight, float worldHeight){
-        // Clamp Y position
-            player.getSprite().setY(MathUtils.clamp(
-                player.getSprite().getY(), 
-                playerHeight, 
-                worldHeight - (2 * playerHeight)
-            ));
-    }
-    
-    private void clampBounds(Player player){
-        player.getBounds().setX(player.getSprite().getX());
-        player.getBounds().setY(player.getSprite().getY());
+    /**
+     * Updates player collision bounds to match sprite position.
+     *
+     * @param player the player to update
+     */
+    private void updatePlayerBounds(Player player) {
+        player.getBounds().setPosition(player.getSprite().getX(), player.getSprite().getY());
     }
 }
-
-

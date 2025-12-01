@@ -64,7 +64,7 @@ public class LeaderboardScreen implements Screen {
         stage.addActor(root);
         
         // Title
-        Label title = new Label("LEADERBOARDS", gameInstance.skin);
+        Label title = new Label("LEADERBOARDS", gameInstance.getSkin());
         title.setFontScale(1.5f);
         root.add(title).colspan(3).padBottom(15);
         root.row();
@@ -74,7 +74,7 @@ public class LeaderboardScreen implements Screen {
         for (int i = 0; i < MINIGAME_NAMES.length; i++) {
             final int tabIndex = i;
             String tabName = MINIGAME_NAMES[i];
-            TextButton tabButton = new TextButton(tabName, gameInstance.skin);
+            TextButton tabButton = new TextButton(tabName, gameInstance.getSkin());
             
             // Highlight current tab
             if (i == currentTabIndex) {
@@ -98,13 +98,13 @@ public class LeaderboardScreen implements Screen {
         scoresTable.top();
         buildScoresTable(scoresTable, MINIGAME_NAMES[currentTabIndex]);
         
-        ScrollPane scrollPane = new ScrollPane(scoresTable, gameInstance.skin);
+        ScrollPane scrollPane = new ScrollPane(scoresTable, gameInstance.getSkin());
         scrollPane.setFadeScrollBars(false);
         root.add(scrollPane).colspan(3).expand().fill().pad(10);
         root.row();
         
         // Back button
-        TextButton backButton = new TextButton("Back to Menu", gameInstance.skin);
+        TextButton backButton = new TextButton("Back to Menu", gameInstance.getSkin());
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -127,7 +127,7 @@ public class LeaderboardScreen implements Screen {
         
         LeaderboardManager leaderboard = gameInstance.getLeaderboardManager();
         if (leaderboard == null) {
-            Label noData = new Label("Leaderboard unavailable", gameInstance.skin);
+            Label noData = new Label("Leaderboard unavailable", gameInstance.getSkin());
             table.add(noData);
             return;
         }
@@ -135,16 +135,16 @@ public class LeaderboardScreen implements Screen {
         List<MiniGameScore> scores = leaderboard.getScores(minigameName);
         
         if (scores.isEmpty()) {
-            Label noScores = new Label("No scores yet!\nPlay some minigames to set records.", gameInstance.skin);
+            Label noScores = new Label("No scores yet!\nPlay some minigames to set records.", gameInstance.getSkin());
             noScores.setAlignment(Align.center);
             table.add(noScores).pad(20);
             return;
         }
         
         // Header row
-        Label rankHeader = new Label("Rank", gameInstance.skin);
-        Label playerHeader = new Label("Player", gameInstance.skin);
-        Label scoreHeader = new Label("Score", gameInstance.skin);
+        Label rankHeader = new Label("Rank", gameInstance.getSkin());
+        Label playerHeader = new Label("Player", gameInstance.getSkin());
+        Label scoreHeader = new Label("Score", gameInstance.getSkin());
         
         rankHeader.setFontScale(0.9f);
         playerHeader.setFontScale(0.9f);
@@ -156,7 +156,7 @@ public class LeaderboardScreen implements Screen {
         table.row();
         
         // Divider
-        Label divider = new Label("─────────────────────────────", gameInstance.skin);
+        Label divider = new Label("─────────────────────────────", gameInstance.getSkin());
         divider.setFontScale(0.7f);
         table.add(divider).colspan(3).padBottom(5);
         table.row();
@@ -168,9 +168,9 @@ public class LeaderboardScreen implements Screen {
             String playerName = score.getPlayerName();
             String scoreText = leaderboard.formatScore(minigameName, score.getScoreValue());
             
-            Label rankLabel = new Label(rankText, gameInstance.skin);
-            Label playerLabel = new Label(playerName, gameInstance.skin);
-            Label scoreLabel = new Label(scoreText, gameInstance.skin);
+            Label rankLabel = new Label(rankText, gameInstance.getSkin());
+            Label playerLabel = new Label(playerName, gameInstance.getSkin());
+            Label scoreLabel = new Label(scoreText, gameInstance.getSkin());
             
             // Gold, silver, bronze colors for top 3
             if (rank == 1) {

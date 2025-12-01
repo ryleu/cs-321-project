@@ -1,9 +1,8 @@
 package com.roachstudios.critterparade.menus;
 
 import com.roachstudios.critterparade.CritterParade;
-import com.roachstudios.critterparade.NamedSupplier;
 import com.roachstudios.critterparade.Player;
-import com.roachstudios.critterparade.minigames.MiniGame;
+import com.roachstudios.critterparade.minigames.MiniGameDescriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +18,7 @@ import java.util.List;
 public class MiniGameRushController {
     
     private final CritterParade game;
-    private final List<NamedSupplier<MiniGame>> minigameQueue;
+    private final List<MiniGameDescriptor> minigameQueue;
     private int currentMinigameIndex = 0;
     
     /**
@@ -63,11 +62,11 @@ public class MiniGameRushController {
     }
     
     /**
-     * Gets the current minigame supplier without advancing.
+     * Gets the current minigame descriptor without advancing.
      *
-     * @return the current minigame supplier, or null if none remain
+     * @return the current minigame descriptor, or null if none remain
      */
-    public NamedSupplier<MiniGame> getCurrentMinigame() {
+    public MiniGameDescriptor getCurrentMinigame() {
         if (!hasNextMinigame()) {
             return null;
         }
@@ -86,9 +85,9 @@ public class MiniGameRushController {
      * Call {@link #advanceToNextMinigame()} after the minigame completes.
      */
     public void startCurrentMinigame() {
-        NamedSupplier<MiniGame> current = getCurrentMinigame();
+        MiniGameDescriptor current = getCurrentMinigame();
         if (current != null) {
-            game.setScreen(new MiniGameInstructionScreen(game, current.supplier()));
+            game.setScreen(new MiniGameInstructionScreen(game, current));
         }
     }
     

@@ -12,8 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.roachstudios.critterparade.CritterParade;
-import com.roachstudios.critterparade.NamedSupplier;
-import com.roachstudios.critterparade.minigames.MiniGame;
+import com.roachstudios.critterparade.minigames.MiniGameDescriptor;
 
 /**
  * Presents a list of available mini games and navigates to a {@link PlayerSelectMenu}
@@ -37,33 +36,33 @@ public class MiniGameSelectMenu implements Screen {
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override
     /**
      * Builds the UI tree the first time the screen is shown.
      *
      * <p>We create widgets here (rather than in the constructor) so the screen can
      * be reinstantiated or revisited without holding onto stale UI state.</p>
      */
+    @Override
     public void show() {
         // Build the UI tree on-demand to keep the constructor lightweight.
         Table root = new Table();
         stage.addActor(root);
         root.setFillParent(true);
 
-        Label title = new Label("Select a Mini Game", gameInstance.skin);
+        Label title = new Label("Select a Mini Game", gameInstance.getSkin());
         title.setAlignment(Align.center);
 
         root.add(title).expandX().fillX().padBottom(20);
 
-        for (NamedSupplier<MiniGame> namedMiniGame : gameInstance.getMiniGames()) {
+        for (MiniGameDescriptor miniGame : gameInstance.getMiniGames()) {
             root.row();
-            TextButton changeButton = new TextButton(namedMiniGame.name(), gameInstance.skin);
+            TextButton changeButton = new TextButton(miniGame.name(), gameInstance.getSkin());
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     // Navigate to player select, then to instruction screen before the minigame
                     gameInstance.setScreen(new PlayerSelectMenu(gameInstance, 
-                        () -> new MiniGameInstructionScreen(gameInstance, namedMiniGame.supplier()::get)));
+                        () -> new MiniGameInstructionScreen(gameInstance, miniGame)));
                 }
             });
             root.add(changeButton).pad(5);
@@ -72,12 +71,12 @@ public class MiniGameSelectMenu implements Screen {
         root.setDebug(gameInstance.isDebugMode(), true);
     }
 
-    @Override
     /**
      * Advances and draws the stage each frame.
      *
      * @param delta time in seconds since the last frame
      */
+    @Override
     public void render(float delta) {
         // Clear each frame; scene2d does not clear automatically.
         Gdx.gl.glClearColor(1f, 0.992f, 0.816f, 1f);
@@ -87,10 +86,13 @@ public class MiniGameSelectMenu implements Screen {
         stage.draw();
     }
 
-    @Override
     /**
      * Updates the viewport to maintain the virtual size and center the camera.
+     *
+     * @param width new window width
+     * @param height new window height
      */
+    @Override
     public void resize(int width, int height) {
         // Center the camera so the virtual area remains anchored after resize.
         stage.getViewport().update(width, height, true);

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.roachstudios.critterparade.menus;
 
 import com.badlogic.gdx.Gdx;
@@ -62,17 +58,17 @@ public class MiniGameResultScreen implements Screen{
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override
     /**
      * Builds a simple list of placements and adds a Continue button whose
      * destination depends on the active game mode.
      */
+    @Override
     public void show() {
         Table root = new Table();
         stage.addActor(root);
         root.setFillParent(true);
         
-        Label title = new Label("Results:", gameInstance.skin);
+        Label title = new Label("Results:", gameInstance.getSkin());
         title.setAlignment(Align.center);
 
         root.add(title).expandX().fillX().padBottom(10);
@@ -86,15 +82,15 @@ public class MiniGameResultScreen implements Screen{
             int pointsAwarded = (5 * (numPlayers - placement)) / (numPlayers - 1);
             
             String resultText = placement + ". " + placements[i].getName() + " (+" + pointsAwarded + " crumbs)";
-            Label place = new Label(resultText, gameInstance.skin);
+            Label place = new Label(resultText, gameInstance.getSkin());
             place.setAlignment(Align.center);
             root.add(place).expandX().fillX().pad(3);
         }
         
         // Continue action depends on whether we are in the board flow, practice, or rush.
-        if(gameInstance.mode == CritterParade.Mode.BOARD_MODE){
+        if(gameInstance.getMode() == CritterParade.Mode.BOARD_MODE){
             root.row();
-            TextButton changeButton = new TextButton("Continue", gameInstance.skin);
+            TextButton changeButton = new TextButton("Continue", gameInstance.getSkin());
             changeButton.addListener(new ChangeListener() {
                 
                 
@@ -113,15 +109,15 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.getSkin());
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
             root.setDebug(gameInstance.isDebugMode(), true);
         
-        }else if(gameInstance.mode == CritterParade.Mode.PRACTICE_MODE){
+        }else if(gameInstance.getMode() == CritterParade.Mode.PRACTICE_MODE){
             root.row();
-            TextButton changeButton = new TextButton("Continue", gameInstance.skin);
+            TextButton changeButton = new TextButton("Continue", gameInstance.getSkin());
             changeButton.addListener(new ChangeListener() {
                 
                 
@@ -137,12 +133,12 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.getSkin());
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
             root.setDebug(gameInstance.isDebugMode(), true);
-        }else if(gameInstance.mode == CritterParade.Mode.RUSH_MODE){
+        }else if(gameInstance.getMode() == CritterParade.Mode.RUSH_MODE){
             // In rush mode, show progress and continue to next minigame or final results
             MiniGameRushController rushController = gameInstance.getRushController();
             
@@ -150,7 +146,7 @@ public class MiniGameResultScreen implements Screen{
             root.row();
             String progressText = "Minigame " + rushController.getCurrentMinigameNumber() + 
                     " of " + rushController.getTotalMinigameCount() + " complete";
-            Label progressLabel = new Label(progressText, gameInstance.skin);
+            Label progressLabel = new Label(progressText, gameInstance.getSkin());
             progressLabel.setAlignment(Align.center);
             root.add(progressLabel).expandX().fillX().padTop(10);
             
@@ -159,7 +155,7 @@ public class MiniGameResultScreen implements Screen{
             
             root.row();
             String buttonText = rushController.hasNextMinigame() ? "Next Minigame" : "See Final Results";
-            TextButton changeButton = new TextButton(buttonText, gameInstance.skin);
+            TextButton changeButton = new TextButton(buttonText, gameInstance.getSkin());
             changeButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
@@ -177,7 +173,7 @@ public class MiniGameResultScreen implements Screen{
             
             // Add timer label
             root.row();
-            timerLabel = new Label("Continuing in 5...", gameInstance.skin);
+            timerLabel = new Label("Continuing in 5...", gameInstance.getSkin());
             timerLabel.setAlignment(Align.center);
             root.add(timerLabel).expandX().fillX().padTop(10);
         
@@ -186,10 +182,12 @@ public class MiniGameResultScreen implements Screen{
         
     }
 
-    @Override
     /**
      * Clears the screen, updates the auto-skip timer, and renders the stage.
+     *
+     * @param f time since last frame
      */
+    @Override
     public void render(float f) {
         // Update auto-skip timer
         if (!hasNavigated) {
@@ -205,14 +203,14 @@ public class MiniGameResultScreen implements Screen{
             // Auto-navigate when timer expires
             if (autoSkipTimer <= 0) {
                 hasNavigated = true;
-                if (gameInstance.mode == CritterParade.Mode.BOARD_MODE) {
+                if (gameInstance.getMode() == CritterParade.Mode.BOARD_MODE) {
                     // Resume board music
                     gameInstance.startBoardMusic();
                     gameInstance.setScreen(new PicnicPondBoard(gameInstance));
-                } else if (gameInstance.mode == CritterParade.Mode.PRACTICE_MODE) {
+                } else if (gameInstance.getMode() == CritterParade.Mode.PRACTICE_MODE) {
                     // MainMenu.show() will start intro music
                     gameInstance.setScreen(new MainMenu(gameInstance));
-                } else if (gameInstance.mode == CritterParade.Mode.RUSH_MODE) {
+                } else if (gameInstance.getMode() == CritterParade.Mode.RUSH_MODE) {
                     MiniGameRushController rushController = gameInstance.getRushController();
                     if (rushController.hasNextMinigame()) {
                         rushController.startCurrentMinigame();
@@ -231,10 +229,13 @@ public class MiniGameResultScreen implements Screen{
         stage.draw();
     }
 
-    @Override
     /**
      * Updates the viewport and centers the camera.
+     *
+     * @param i new window width
+     * @param i1 new window height
      */
+    @Override
     public void resize(int i, int i1) {
         stage.getViewport().update(i, i1, true);
     }
