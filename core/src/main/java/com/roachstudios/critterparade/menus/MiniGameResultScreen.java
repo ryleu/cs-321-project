@@ -91,7 +91,7 @@ public class MiniGameResultScreen implements Screen{
             root.add(place).expandX().fillX();
         }
         
-        // Continue action depends on whether we are in the board flow or practice.
+        // Continue action depends on whether we are in the board flow, practice, or rush.
         if(gameInstance.mode == CritterParade.Mode.BOARD_MODE){
             root.row();
             TextButton changeButton = new TextButton("Continue", gameInstance.skin);
@@ -140,6 +140,46 @@ public class MiniGameResultScreen implements Screen{
             root.add(timerLabel).expandX().fillX().padTop(10);
         
             root.setDebug(gameInstance.isDebugMode(), true);
+        }else if(gameInstance.mode == CritterParade.Mode.RUSH_MODE){
+            // In rush mode, show progress and continue to next minigame or final results
+            MiniGameRushController rushController = gameInstance.getRushController();
+            
+            // Show rush progress
+            root.row();
+            String progressText = "Minigame " + rushController.getCurrentMinigameNumber() + 
+                    " of " + rushController.getTotalMinigameCount() + " complete";
+            TextField progressLabel = new TextField(progressText, gameInstance.skin);
+            progressLabel.setAlignment(Align.center);
+            root.add(progressLabel).expandX().fillX().padTop(10);
+            
+            // Advance to next minigame
+            rushController.advanceToNextMinigame();
+            
+            root.row();
+            String buttonText = rushController.hasNextMinigame() ? "Next Minigame" : "See Final Results";
+            TextButton changeButton = new TextButton(buttonText, gameInstance.skin);
+            changeButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeListener.ChangeEvent event, Actor actor) {
+                    if (!hasNavigated) {
+                        hasNavigated = true;
+                        if (rushController.hasNextMinigame()) {
+                            rushController.startCurrentMinigame();
+                        } else {
+                            rushController.showFinalResults();
+                        }
+                    }
+                }
+            });
+            root.add(changeButton);
+            
+            // Add timer label
+            root.row();
+            timerLabel = new TextField("Continuing in 5...", gameInstance.skin);
+            timerLabel.setAlignment(Align.center);
+            root.add(timerLabel).expandX().fillX().padTop(10);
+        
+            root.setDebug(gameInstance.isDebugMode(), true);
         }
         
     }
@@ -167,6 +207,13 @@ public class MiniGameResultScreen implements Screen{
                     gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                 } else if (gameInstance.mode == CritterParade.Mode.PRACTICE_MODE) {
                     gameInstance.setScreen(new MainMenu(gameInstance));
+                } else if (gameInstance.mode == CritterParade.Mode.RUSH_MODE) {
+                    MiniGameRushController rushController = gameInstance.getRushController();
+                    if (rushController.hasNextMinigame()) {
+                        rushController.startCurrentMinigame();
+                    } else {
+                        rushController.showFinalResults();
+                    }
                 }
                 return;
             }

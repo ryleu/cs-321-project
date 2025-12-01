@@ -80,6 +80,29 @@ public class MainMenu implements Screen {
 
         root.row();
 
+        TextButton rushMode = new TextButton("Minigame Rush", gameInstance.skin);
+        rushMode.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.mode = CritterParade.Mode.RUSH_MODE;
+                gameInstance.log("Mode selected: RUSH_MODE");
+                gameInstance.logModeSelected(CritterParade.Mode.RUSH_MODE);
+                // Go to player select, then start the rush
+                gameInstance.setScreen(new PlayerSelectMenu(gameInstance, () -> {
+                    // Reset player scores for a fresh rush
+                    gameInstance.resetPlayerScores();
+                    // Create and set the rush controller
+                    MiniGameRushController rushController = new MiniGameRushController(gameInstance);
+                    gameInstance.setRushController(rushController);
+                    // Return the instruction screen for the first minigame
+                    return new MiniGameInstructionScreen(gameInstance, rushController.getCurrentMinigame().supplier());
+                }));
+            }
+        });
+        root.add(rushMode).fill().align(Align.center);
+
+        root.row();
+
         TextButton howToPlay = new TextButton("How To Play", gameInstance.skin);
         howToPlay.addListener(new ChangeListener() {
             @Override

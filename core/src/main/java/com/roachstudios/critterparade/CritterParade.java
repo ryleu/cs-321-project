@@ -14,6 +14,7 @@ import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
+import com.roachstudios.critterparade.menus.MiniGameRushController;
 import com.roachstudios.critterparade.minigames.CatchObjectsMiniGame;
 import com.roachstudios.critterparade.minigames.DodgeBallMiniGame;
 
@@ -84,7 +85,9 @@ public class CritterParade extends Game {
         /** Full board game mode with minigames and fruits. */
         BOARD_MODE,
         /** Practice mode for playing individual minigames. */
-        PRACTICE_MODE
+        PRACTICE_MODE,
+        /** Rush mode: play all minigames back-to-back, most crumbs wins. */
+        RUSH_MODE
     }
     
     /** Current game mode affecting navigation flow between screens. */
@@ -107,6 +110,11 @@ public class CritterParade extends Game {
     
     private SettingsManager settings;
     private SessionLogger sessionLogger;
+    
+    /**
+     * Controller for minigame rush mode, tracks the sequence of minigames.
+     */
+    private MiniGameRushController rushController;
     
     /**
      * Creates the game with debug mode disabled.
@@ -246,6 +254,35 @@ public class CritterParade extends Game {
         if (sessionLogger != null) {
             sessionLogger.logScreenChange(screenName);
         }
+    }
+    
+    // =========================================================================
+    // Rush Mode Controller
+    // =========================================================================
+    
+    /**
+     * Gets the current rush mode controller.
+     *
+     * @return the rush controller, or null if not in rush mode
+     */
+    public MiniGameRushController getRushController() {
+        return rushController;
+    }
+    
+    /**
+     * Sets the rush mode controller.
+     *
+     * @param controller the rush controller to use
+     */
+    public void setRushController(MiniGameRushController controller) {
+        this.rushController = controller;
+    }
+    
+    /**
+     * Clears the rush mode controller when exiting rush mode.
+     */
+    public void clearRushController() {
+        this.rushController = null;
     }
 
     /**
