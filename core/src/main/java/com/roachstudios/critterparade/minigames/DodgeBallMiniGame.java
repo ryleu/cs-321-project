@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
 import com.roachstudios.critterparade.minigames.minigameprops.DodgeBall;
+import com.roachstudios.critterparade.minigames.minigameprops.DodgeWrench;
 
 import java.util.Random;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class DodgeBallMiniGame extends MiniGame {
         "Survive the longest to win!";
     
     /** Background texture path. */
-    private static final String BACKGROUND_PATH = "MiniGames/SimpleRacer/Clouds.png";
+    private static final String BACKGROUND_PATH = "MiniGames/DodgeBall/background.png";
     
     /** Elimination marker texture path. */
     private static final String OUT_MARKER_PATH = "MiniGames/DodgeBall/X.png";
@@ -45,6 +46,12 @@ public class DodgeBallMiniGame extends MiniGame {
     
     /** Ball movement speed in world units per second. */
     private static final float BALL_SPEED = 4f;
+    
+    /** Wrench movement speed in world units per second (double ball speed). */
+    private static final float WRENCH_SPEED = BALL_SPEED * 2f;
+    
+    /** Chance to spawn a wrench instead of a ball (1 in 100). */
+    private static final int WRENCH_SPAWN_CHANCE = 100;
     
     /** Size of player sprites in world units. */
     private static final float PLAYER_SIZE = 1.0f;
@@ -69,6 +76,9 @@ public class DodgeBallMiniGame extends MiniGame {
     
     /** Active balls currently on screen. */
     private final List<DodgeBall> activeBalls = new ArrayList<>();
+    
+    /** Active wrenches currently on screen. */
+    private final List<DodgeWrench> activeWrenches = new ArrayList<>();
     
     /** Elimination markers for eliminated players. */
     private final List<Sprite> outMarkers = new ArrayList<>();
@@ -150,6 +160,7 @@ public class DodgeBallMiniGame extends MiniGame {
         gameCompleted = false;
         timeElapsed = 0f;
         activeBalls.clear();
+        activeWrenches.clear();
         outMarkers.clear();
         
         for (int i = 0; i < playerEliminated.length; i++) {
@@ -227,11 +238,12 @@ public class DodgeBallMiniGame extends MiniGame {
         spawnCooldown -= delta;
         
         if (spawnCooldown <= 0) {
-            spawnBall();
+            spawnProjectile();
             updateSpawnCooldown();
         }
         
         updateBalls();
+        updateWrenches();
         checkGameComplete();
     }
     
@@ -274,6 +286,10 @@ public class DodgeBallMiniGame extends MiniGame {
             ball.getSprite().draw(game.getBatch());
         }
         
+        for (DodgeWrench wrench : activeWrenches) {
+            wrench.getSprite().draw(game.getBatch());
+        }
+        
         for (Sprite marker : outMarkers) {
             marker.draw(game.getBatch());
         }
@@ -303,6 +319,9 @@ public class DodgeBallMiniGame extends MiniGame {
         for (DodgeBall ball : activeBalls) {
             ball.dispose();
         }
+        for (DodgeWrench wrench : activeWrenches) {
+            wrench.dispose();
+        }
     }
     
     /**
@@ -322,27 +341,56 @@ public class DodgeBallMiniGame extends MiniGame {
     }
     
     /**
-     * Spawns a ball from a random edge with a random direction.
+     * Spawns a projectile (ball or wrench) from a random edge with a random direction.
+     * There is a 1 in 100 chance to spawn a wrench instead of a ball.
      */
-    private void spawnBall() {
+    private void spawnProjectile() {
         int direction = random.nextInt(4);
+        boolean isWrench = random.nextInt(WRENCH_SPAWN_CHANCE) == 0;
         
+        int startX, startY;
         switch (direction) {
             case 0: // Moving up, spawn from bottom
-                activeBalls.add(createBall(getRandomSpawnX(), 0, direction));
+                startX = getRandomSpawnX();
+                startY = 0;
                 break;
             case 1: // Moving down, spawn from top
-                activeBalls.add(createBall(getRandomSpawnX(), 8, direction));
+                startX = getRandomSpawnX();
+                startY = 8;
                 break;
             case 2: // Moving left, spawn from right
-                activeBalls.add(createBall(15, getRandomSpawnY(), direction));
+                startX = 15;
+                startY = getRandomSpawnY();
                 break;
             case 3: // Moving right, spawn from left
-                activeBalls.add(createBall(0, getRandomSpawnY(), direction));
+                startX = 0;
+                startY = getRandomSpawnY();
                 break;
             default:
-                break;
+                return;
         }
+        
+        if (isWrench) {
+            activeWrenches.add(createWrench(startX, startY, direction));
+        } else {
+            activeBalls.add(createBall(startX, startY, direction));
+        }
+    }
+    
+    /**
+     * Creates a new wrench at the specified position with the given direction.
+     *
+     * @param startX starting X position
+     * @param startY starting Y position
+     * @param direction movement direction (0=up, 1=down, 2=left, 3=right)
+     * @return the created DodgeWrench
+     */
+    private DodgeWrench createWrench(int startX, int startY, int direction) {
+        DodgeWrench wrench = new DodgeWrench();
+        wrench.getSprite().setPosition(startX, startY);
+        wrench.getBounds().setPosition(startX, startY);
+        wrench.setDirection(direction);
+        return wrench;
     }
     
     /**
@@ -388,6 +436,51 @@ public class DodgeBallMiniGame extends MiniGame {
     }
     
     /**
+     * Updates all wrench positions, rotations, and removes off-screen wrenches.
+     */
+    private void updateWrenches() {
+        float delta = Gdx.graphics.getDeltaTime();
+        float speed = WRENCH_SPEED * delta;
+        
+        Iterator<DodgeWrench> iterator = activeWrenches.iterator();
+        while (iterator.hasNext()) {
+            DodgeWrench wrench = iterator.next();
+            
+            // Update rotation (90 degrees every 0.5 seconds)
+            wrench.updateRotation(delta);
+            
+            switch (wrench.getDirection()) {
+                case 0: // Up
+                    wrench.move(0, speed);
+                    if (wrench.getSprite().getY() > game.getViewport().getWorldHeight()) {
+                        iterator.remove();
+                    }
+                    break;
+                case 1: // Down
+                    wrench.move(0, -speed);
+                    if (wrench.getSprite().getY() < -1) {
+                        iterator.remove();
+                    }
+                    break;
+                case 2: // Left
+                    wrench.move(-speed, 0);
+                    if (wrench.getSprite().getX() < -1) {
+                        iterator.remove();
+                    }
+                    break;
+                case 3: // Right
+                    wrench.move(speed, 0);
+                    if (wrench.getSprite().getX() > game.getViewport().getWorldWidth()) {
+                        iterator.remove();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    
+    /**
      * Creates an elimination marker at the player's last position.
      *
      * @param player the eliminated player
@@ -400,7 +493,7 @@ public class DodgeBallMiniGame extends MiniGame {
     }
     
     /**
-     * Checks if a player was hit by any ball.
+     * Checks if a player was hit by any ball or wrench.
      *
      * @param player the player to check
      * @return true if the player was hit
@@ -409,6 +502,12 @@ public class DodgeBallMiniGame extends MiniGame {
         for (DodgeBall ball : activeBalls) {
             if (player.getBounds().overlaps(ball.getBounds()) && !isPlayerEliminated(player)) {
                 activeBalls.remove(ball);
+                return true;
+            }
+        }
+        for (DodgeWrench wrench : activeWrenches) {
+            if (player.getBounds().overlaps(wrench.getBounds()) && !isPlayerEliminated(player)) {
+                activeWrenches.remove(wrench);
                 return true;
             }
         }

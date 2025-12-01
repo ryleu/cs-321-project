@@ -92,7 +92,7 @@ public class SimpleRacerMiniGame extends MiniGame {
         gameCompleted = false;
         gameTimer = 0f;
         
-        backgroundTex = new Texture("MiniGames/SimpleRacer/Clouds.png");
+        backgroundTex = new Texture("MiniGames/SimpleRacer/background.png");
         finishLineTex = new Texture("MiniGames/SimpleRacer/FinishLine.png");
         
         // Set up initial positions and sizes for all players
@@ -101,7 +101,7 @@ public class SimpleRacerMiniGame extends MiniGame {
             Player player = players[i];
             player.setSpriteSize(playerSize);
             player.getSprite().setX(0);
-            player.getSprite().setY(playerSize * i);
+            player.getSprite().setY(playerSize * (i + 1));
             playerFinished[i] = false;
             finishTimes[i] = -1f;
         }
@@ -128,7 +128,7 @@ public class SimpleRacerMiniGame extends MiniGame {
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
             players[i].setSpriteSize(playerSize);
-            players[i].getSprite().setPosition(0, playerSize * i);
+            players[i].getSprite().setPosition(0, playerSize * (i + 1));
         }
     }
 
@@ -183,8 +183,8 @@ public class SimpleRacerMiniGame extends MiniGame {
                 worldWidth - playerWidth
             ));
             
-            // Set Y position based on player lane
-            player.getSprite().setY(playerHeight * i);
+            // Set Y position based on player lane (with gap at bottom)
+            player.getSprite().setY(playerHeight * (i + 1));
             
             // Check if player crossed finish line
             if (player.getSprite().getX() >= 14 && !playerFinished[i]) {
