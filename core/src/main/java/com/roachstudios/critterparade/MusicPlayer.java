@@ -74,17 +74,17 @@ public class MusicPlayer implements Disposable {
         
         // Load minigame music tracks (commented out until files exist)
         minigameMusic = new Music[3];
-        // minigameMusic[0] = Gdx.audio.newMusic(Gdx.files.internal("Music/minigame0.mp3"));
-        // minigameMusic[0].setLooping(true);
-        // minigameMusic[0].setVolume(DEFAULT_VOLUME);
+        minigameMusic[0] = Gdx.audio.newMusic(Gdx.files.internal("Music/MiniGame1FINAL.mp3"));
+        minigameMusic[0].setLooping(true);
+        minigameMusic[0].setVolume(DEFAULT_VOLUME);
         
-        // minigameMusic[1] = Gdx.audio.newMusic(Gdx.files.internal("Music/minigame1.mp3"));
-        // minigameMusic[1].setLooping(true);
-        // minigameMusic[1].setVolume(DEFAULT_VOLUME);
+        minigameMusic[1] = Gdx.audio.newMusic(Gdx.files.internal("Music/MiniGame2FINAL.mp3"));
+        minigameMusic[1].setLooping(true);
+        minigameMusic[1].setVolume(DEFAULT_VOLUME);
         
-        // minigameMusic[2] = Gdx.audio.newMusic(Gdx.files.internal("Music/minigame2.mp3"));
-        // minigameMusic[2].setLooping(true);
-        // minigameMusic[2].setVolume(DEFAULT_VOLUME);
+        minigameMusic[2] = Gdx.audio.newMusic(Gdx.files.internal("Music/MiniGame3FINAL.mp3"));
+        minigameMusic[2].setLooping(true);
+        minigameMusic[2].setVolume(DEFAULT_VOLUME);
     }
     
     /**

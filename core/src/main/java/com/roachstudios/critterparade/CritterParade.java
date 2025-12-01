@@ -53,11 +53,12 @@ public class CritterParade extends Game {
      */
     private static final String[] PLAYER_SPRITE_PATHS = {
         "PlayerSprites/bumble_bee.png",
-        "PlayerSprites/lady_bug.png",
-        "PlayerSprites/pond_frog.png",
+        "PlayerSprites/solider_ant.png",
         "PlayerSprites/red_squirrel.png",
+        "PlayerSprites/lady_bug.png",
         "PlayerSprites/field_mouse.png",
-        "PlayerSprites/solider_ant.png"
+        "PlayerSprites/pond_frog.png"
+        
     };
     
     /**
@@ -65,11 +66,12 @@ public class CritterParade extends Game {
      */
     private static final String[] CRITTER_NAMES = {
         "Bumble Bee",
-        "Lady Bug",
-        "Pond Frog",
+        "Soldier Ant",
         "Red Squirrel",
+        "Lady Bug",
         "Field Mouse",
-        "Soldier Ant"
+        "Pond Frog"
+        
     };
     
     /**
