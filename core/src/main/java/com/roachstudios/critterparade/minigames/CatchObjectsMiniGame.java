@@ -11,6 +11,20 @@ import com.roachstudios.critterparade.menus.MiniGameResultScreen;
 
 public class CatchObjectsMiniGame extends MiniGame {
 
+    @Override
+    public String getName() {
+        return "Catching Stars";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Catch falling stars to score points.\n" +
+               "Move Left: A or LEFT ARROW\n" +
+               "Move Right: D or RIGHT ARROW\n" +
+               "Missing ONE star ends your turn.\n" +
+               "You can catch up to 10 stars in a turn.";
+    }
+
     private final CritterParade gameInstance;
     private Texture backgroundTex;
     private Texture fallingObjectTex;
@@ -64,6 +78,7 @@ public class CatchObjectsMiniGame extends MiniGame {
     private float blinkTimer = 0f;
 
     public CatchObjectsMiniGame(CritterParade gameInstance) {
+        super(gameInstance);
         this.gameInstance = gameInstance;
 
         backgroundTex = new Texture("MiniGames/CatchObjects/night_sky.png");
@@ -88,7 +103,7 @@ public class CatchObjectsMiniGame extends MiniGame {
             chosenCharacterIndex[i] = -1; // not chosen yet
 
             // temporary placeholder, will be overridden when they pick a character
-            players[i] = new Player(i + 1, new Texture("PlayerSprites/bumble_bee.png"));
+            players[i] = new Player(i + 1, CHARACTER_NAMES[0], new Texture("PlayerSprites/bumble_bee.png"));
             players[i].setSpriteSize(1f);
             players[i].getSprite().setPosition(7f, 1f);
         }
@@ -256,6 +271,7 @@ public class CatchObjectsMiniGame extends MiniGame {
                 // Build player with chosen texture
                 players[currentPlayerIndex] = new Player(
                     currentPlayerIndex + 1,
+                    CHARACTER_NAMES[i],
                     new Texture(CHARACTER_TEXTURE_PATHS[i])
                 );
                 players[currentPlayerIndex].setSpriteSize(1f);

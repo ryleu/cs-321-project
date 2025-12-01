@@ -60,8 +60,8 @@ public class DodgeBallMiniGame extends MiniGame {
      */
     private boolean gameCompleted;
     
-    private List<dodgeBall> activeBalls = new ArrayList();
-    private List<Sprite> outSprites = new ArrayList();
+    private List<dodgeBall> activeBalls = new ArrayList<>();
+    private List<Sprite> outSprites = new ArrayList<>();
     
     private float timeElapsed = 0f;
     private float coolDown = 1f;

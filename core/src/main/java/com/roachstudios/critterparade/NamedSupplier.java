@@ -12,3 +12,4 @@ import java.util.function.Supplier;
  */
 public record NamedSupplier<T>(String name, Supplier<T> supplier) {}
 
+
