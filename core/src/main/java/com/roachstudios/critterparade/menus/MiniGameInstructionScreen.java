@@ -202,6 +202,9 @@ public class MiniGameInstructionScreen implements Screen {
         if (countdownTimer <= 0 && !hasStarted) {
             hasStarted = true;
             
+            // Start minigame music (stops any currently playing music)
+            gameInstance.startMinigameMusic();
+            
             // Log minigame start
             gameInstance.log("Starting minigame: %s", gameName);
             gameInstance.logMinigameStart(gameName);

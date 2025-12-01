@@ -108,6 +108,9 @@ public class CritterParade extends Game {
     private SettingsManager settings;
     private SessionLogger sessionLogger;
     
+    /** Centralized music player for all game music. */
+    private MusicPlayer musicPlayer;
+    
     /**
      * Creates the game with debug mode disabled.
      */
@@ -247,6 +250,55 @@ public class CritterParade extends Game {
             sessionLogger.logScreenChange(screenName);
         }
     }
+    
+    // =========================================================================
+    // Music Management
+    // =========================================================================
+    
+    /**
+     * Gets the music player for controlling game music.
+     * 
+     * @return the music player instance
+     */
+    public MusicPlayer getMusicPlayer() {
+        return musicPlayer;
+    }
+    
+    /**
+     * Starts the intro/menu music if it's not already playing.
+     */
+    public void startIntroMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playIntro();
+        }
+    }
+    
+    /**
+     * Stops the currently playing music.
+     */
+    public void stopIntroMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.stop();
+        }
+    }
+    
+    /**
+     * Starts the game board music.
+     */
+    public void startBoardMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playBoard();
+        }
+    }
+    
+    /**
+     * Starts a randomly selected minigame music track.
+     */
+    public void startMinigameMusic() {
+        if (musicPlayer != null) {
+            musicPlayer.playMinigame();
+        }
+    }
 
     /**
      * Initializes shared resources and registers boards/mini games.
@@ -270,6 +322,9 @@ public class CritterParade extends Game {
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
         registerMiniGame(DodgeBallMiniGame.NAME, () -> new DodgeBallMiniGame(this));
         registerMiniGame(CatchObjectsMiniGame.NAME, () -> new CatchObjectsMiniGame(this));
+
+        // Initialize music player
+        musicPlayer = new MusicPlayer();
 
         // Load settings and check for first run
         settings = new SettingsManager();
@@ -305,6 +360,10 @@ public class CritterParade extends Game {
         batch.dispose();
         font.dispose();
         disposePlayerTextures();
+        
+        if (musicPlayer != null) {
+            musicPlayer.dispose();
+        }
     }
 
     /**

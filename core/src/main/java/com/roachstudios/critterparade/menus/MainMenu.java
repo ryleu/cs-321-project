@@ -42,6 +42,9 @@ public class MainMenu implements Screen {
      * Composes the menu UI using a columnar {@link Table} layout.
      */
     public void show() {
+        // Start playing intro music (managed by CritterParade)
+        gameInstance.startIntroMusic();
+        
         // the main element of the menu, everything else is a child of this
         Table root = new Table();
         root.setFillParent(true);
@@ -136,7 +139,7 @@ public class MainMenu implements Screen {
 
     @Override
     public void hide() {
-
+        // Music is managed by CritterParade, don't stop it here
     }
 
     @Override

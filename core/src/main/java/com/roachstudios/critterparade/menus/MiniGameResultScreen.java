@@ -102,6 +102,8 @@ public class MiniGameResultScreen implements Screen{
                 public void changed(ChangeListener.ChangeEvent event, Actor actor) {
                     if (!hasNavigated) {
                         hasNavigated = true;
+                        // Resume board music
+                        gameInstance.startBoardMusic();
                         // Create a fresh board - player state is stored in Player objects
                         gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                     }
@@ -164,8 +166,11 @@ public class MiniGameResultScreen implements Screen{
             if (autoSkipTimer <= 0) {
                 hasNavigated = true;
                 if (gameInstance.mode == CritterParade.Mode.BOARD_MODE) {
+                    // Resume board music
+                    gameInstance.startBoardMusic();
                     gameInstance.setScreen(new PicnicPondBoard(gameInstance));
                 } else if (gameInstance.mode == CritterParade.Mode.PRACTICE_MODE) {
+                    // MainMenu.show() will start intro music
                     gameInstance.setScreen(new MainMenu(gameInstance));
                 }
                 return;

@@ -71,6 +71,9 @@ public class PlayerSelectMenu implements Screen {
                     }
                     gameInstance.logPlayersInitialized(finalI, names);
                     
+                    // Start board music (stops any currently playing music)
+                    gameInstance.startBoardMusic();
+                    
                     gameInstance.setScreen(nextScreen.get());
                 }
             });
