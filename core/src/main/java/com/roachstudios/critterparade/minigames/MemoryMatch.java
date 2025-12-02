@@ -2,11 +2,10 @@ package com.roachstudios.critterparade.minigames;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
-import javax.sound.midi.Sequence;
+import java.util.Arrays;
 
 /**
  * A memory based game: a sequence will show on screen and each player will
@@ -32,12 +31,23 @@ public class MemoryMatch extends MiniGame {
         return INSTRUCTIONS;
     }
     
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their score (correct matches)
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return scores[i];
+            }
+        }
+        return -1f;
+    }
+    
     private Texture backgroundTex;
     private Texture upArrow;
     private Texture rightArrow;
     private Texture downArrow;
     private Texture leftArrow;
-    private double randArrow;
     private int revealTimer = 80;
     
     
@@ -115,17 +125,19 @@ public class MemoryMatch extends MiniGame {
     @Override
     public void show() {
         // Update viewport to current screen size
-        game.viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         
         // Reset game state in case we're replaying
         finishedCount = 0;
         gameCompleted = false;
+        codeLength = 3;
         for (int i = 0; i < playerFinished.length; i++) {
             playerFinished[i] = false;
             playerSequence[i] = "";
-            correctSequence = "";
+            scores[i] = 0;
             placement[i] = null;
         }
+        correctSequence = "";
         
         // Reset positions and sizes when the minigame is shown
         Player[] players = getPlayers();
@@ -146,9 +158,6 @@ public class MemoryMatch extends MiniGame {
      * Reads player inputs and translates them into movement when allowed.
      */
     private void input() {
-        float speed = 16f;
-        float delta = Gdx.graphics.getDeltaTime();
-        
         Player[] players = getPlayers();
         for (int i = 0; i < players.length; i++) {
             if (!playerFinished[i] && acceptInputs) {
@@ -182,17 +191,9 @@ public class MemoryMatch extends MiniGame {
             acceptInputs = true;
         }
         
-        
-        float worldWidth = game.viewport.getWorldWidth();
-        
         Player[] players = getPlayers();
-        float playerWidth = players[0].getSprite().getWidth();
-        float playerHeight = players[0].getSprite().getHeight();
-        
         
         for (int i = 0; i < players.length; i++) {
-            Player player = players[i];
-            
             //Prevents players from entering a code when they already have 
             // hit the length
             if (playerSequence[i].length() == codeLength && playerFinished[i] == false){
@@ -228,14 +229,14 @@ public class MemoryMatch extends MiniGame {
      */
     private void draw() {
         ScreenUtils.clear(1f, 0.992f, 0.816f, 1f);
-        game.viewport.apply();
-        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        game.batch.begin();
+        game.getViewport().apply();
+        game.getBatch().setProjectionMatrix(game.getViewport().getCamera().combined);
+        game.getBatch().begin();
         
-        float worldWidth = game.viewport.getWorldWidth();
-        float worldHeight = game.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
         
-        game.batch.draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        game.getBatch().draw(backgroundTex, 0, 0, worldWidth, worldHeight);
 
         
         //Creates the sequence at the start of a round
@@ -265,26 +266,26 @@ public class MemoryMatch extends MiniGame {
         if (revealTimer >= 0 && correctSequence.length() == codeLength){
             for(int i = 0; i < correctSequence.length(); i++){
                 if (correctSequence.charAt(i) == 'w'){
-                    game.batch.draw(upArrow, 2 + i + i, 4.5f, 1, 1);
+                    game.getBatch().draw(upArrow, 2 + i + i, 4.5f, 1, 1);
                 }
                 if (correctSequence.charAt(i) == 'd'){
-                    game.batch.draw(rightArrow, 2 + i+i, 4.5f, 1, 1);
+                    game.getBatch().draw(rightArrow, 2 + i+i, 4.5f, 1, 1);
                 }
                 if (correctSequence.charAt(i) == 's'){
-                    game.batch.draw(downArrow, 2 + i+i, 4.5f, 1, 1);
+                    game.getBatch().draw(downArrow, 2 + i+i, 4.5f, 1, 1);
                 }
                 if (correctSequence.charAt(i) == 'a'){
-                    game.batch.draw(leftArrow, 2 + i+i, 4.5f, 1, 1);
+                    game.getBatch().draw(leftArrow, 2 + i+i, 4.5f, 1, 1);
                 }
             }
         }
         // Draw all player sprites
         Player[] players = getPlayers();
         for (Player player : players) {
-            player.getSprite().draw(game.batch);
+            player.getSprite().draw(game.getBatch());
         }
         
-        game.batch.end();
+        game.getBatch().end();
     }
     
     /**
@@ -298,19 +299,17 @@ public class MemoryMatch extends MiniGame {
         if (codeLength > 7) {
             gameCompleted = true;
             Player[] players = getPlayers();
-            //Determine placements
-            for (int i = 0; i < getPlayerCount(); i++){
-                int index = i;
-                int largest = scores[i];
-                for (int j = i; j < getPlayerCount(); j++){
-                    if (scores[j] > largest){
-                        //int temp = largest;
-                        largest = scores[j];
-                        //scores[j] = temp;
-                        index = j;
-                    }
-                placement[i] = players[index];
-                }
+            // Determine placements by sorting players by score (highest to lowest)
+            // Create array of indices to sort
+            Integer[] indices = new Integer[getPlayerCount()];
+            for (int i = 0; i < getPlayerCount(); i++) {
+                indices[i] = i;
+            }
+            // Sort indices by score (descending)
+            Arrays.sort(indices, (a, b) -> Integer.compare(scores[b], scores[a]));
+            // Build placement array
+            for (int i = 0; i < getPlayerCount(); i++) {
+                placement[i] = players[indices[i]];
             }
             
             
