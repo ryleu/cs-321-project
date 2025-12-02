@@ -1,498 +1,346 @@
 package com.roachstudios.critterparade.minigames;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.roachstudios.critterparade.CritterParade;
 import com.roachstudios.critterparade.Player;
-import com.roachstudios.critterparade.menus.MiniGameResultScreen;
 
+/**
+ * A mini game where all players simultaneously catch falling stars.
+ * Each player has their own color-coded stars to catch in a shared field.
+ * The player with the most stars at the end wins.
+ */
 public class CatchObjectsMiniGame extends MiniGame {
 
-    private final CritterParade gameInstance;
+    /** The display name for this mini game. */
+    public static final String NAME = "Catching Stars";
+    /** Instructions explaining how to play this mini game. */
+    public static final String INSTRUCTIONS = 
+        "Catch YOUR colored stars to score!\n\n" +
+        "Use your DIRECTIONAL inputs to move.\n" +
+        "Only YOUR stars count - watch the colors!";
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public String getInstructions() {
+        return INSTRUCTIONS;
+    }
+    
+    @Override
+    public float getScoreValue(Player player) {
+        // Find the player's index and return their score (stars caught)
+        Player[] players = getPlayers();
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return scores[i];
+            }
+        }
+        return -1f;
+    }
+
     private Texture backgroundTex;
     private Texture fallingObjectTex;
 
-    private Player[] players;
-    private int playerCount;
-
-    private float fallingX;
-    private float fallingY;
-    private float fallingSpeed;
-
+    private final float playerSize = 1.0f;
+    private final float starSize = 1.0f;
+    
+    // Per-player falling star positions and speeds
+    private float[] fallingX;
+    private float[] fallingY;
+    private float[] fallingSpeed;
+    
+    // Per-player scores
     private int[] scores;
-    private int currentPlayerIndex;
-
-    private boolean gameOver = false;
-
-    // turn-ending UI
-    private boolean showingTurnEnd = false;
-    private float turnEndTimer = 0f;
-
-    // intro UI
-    private boolean showingIntro = true;
-    private float introTimer = 0f;
-    private final float INTRO_DURATION = 3.5f; // give time to read instructions
-
-    // character selection UI
-    private boolean choosingCharacter = true;
-    private int[] chosenCharacterIndex;
-
-    private static final String[] CHARACTER_TEXTURE_PATHS = {
-        "PlayerSprites/bumble_bee.png",
-        "PlayerSprites/field_mouse.png",
-        "PlayerSprites/lady_bug.png",
-        "PlayerSprites/pond_frog.png",
-        "PlayerSprites/red_squirrel.png",
-        "PlayerSprites/solider_ant.png"
+    
+    // Player colors for star tinting
+    private static final Color[] PLAYER_COLORS = {
+        new Color(1.0f, 1.0f, 0.2f, 1f),  // Player 1: Yellow
+        new Color(1.0f, 0.2f, 0.2f, 1f),  // Player 2: Red
+        new Color(0.2f, 0.9f, 0.2f, 1f),  // Player 3: Green
+        new Color(1.0f, 0.6f, 0.1f, 1f),  // Player 4: Orange
+        new Color(0.608f, 0.678f, 0.718f, 1f),  // Player 5: Mouse (#9BADB7)
+        new Color(0.6f, 0.3f, 0.1f, 1f)   // Player 6: Brown
     };
+    
+    // Game timing
+    private float gameTimer = 0f;
+    private static final float GAME_DURATION = 30f; // 30 seconds
+    
+    private boolean gameCompleted = false;
 
-    private static final String[] CHARACTER_NAMES = {
-        "Bumble Bee",
-        "Field Mouse",
-        "Lady Bug",
-        "Pond Frog",
-        "Red Squirrel",
-        "Solider Ant"
-    };
-
-    private Texture[] characterPreviewTextures;
-
-    // for blinking “press 1–6” text
-    private float blinkTimer = 0f;
-
-    public CatchObjectsMiniGame(CritterParade gameInstance) {
-        this.gameInstance = gameInstance;
-
+    public CatchObjectsMiniGame(CritterParade game) {
+        super(game);
+        
         backgroundTex = new Texture("MiniGames/CatchObjects/night_sky.png");
         fallingObjectTex = new Texture("MiniGames/CatchObjects/star.png");
-
-        // load preview textures
-        characterPreviewTextures = new Texture[CHARACTER_TEXTURE_PATHS.length];
-        for (int i = 0; i < CHARACTER_TEXTURE_PATHS.length; i++) {
-            characterPreviewTextures[i] = new Texture(CHARACTER_TEXTURE_PATHS[i]);
-        }
-
-        // player count 1–6
-        playerCount = gameInstance.getNumPlayers();
-        if (playerCount < 1) playerCount = 1;
-        if (playerCount > 6) playerCount = 6;
-
-        players = new Player[playerCount];
+        
+        int playerCount = getPlayerCount();
+        
         scores = new int[playerCount];
-        chosenCharacterIndex = new int[playerCount];
-
+        fallingX = new float[playerCount];
+        fallingY = new float[playerCount];
+        fallingSpeed = new float[playerCount];
+        
+        // Initialize all stars
         for (int i = 0; i < playerCount; i++) {
-            chosenCharacterIndex[i] = -1; // not chosen yet
-
-            // temporary placeholder, will be overridden when they pick a character
-            players[i] = new Player(i + 1, new Texture("PlayerSprites/bumble_bee.png"));
-            players[i].setSpriteSize(1f);
-            players[i].getSprite().setPosition(7f, 1f);
+            scores[i] = 0;
+            resetFallingStar(i);
         }
-
-        currentPlayerIndex = 0;
-        resetFallingStar();
     }
 
     @Override
     public void show() {
-        // allow raw keyboard input (no Stage eating keys)
-        Gdx.input.setInputProcessor(null);
+        game.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        // Reset font scale (other screens may have changed it)
+        game.getFont().getData().setScale(1.0f);
+        
+        // Reset game state
+        gameTimer = 0f;
+        gameCompleted = false;
+        
+        int playerCount = getPlayerCount();
+        float worldWidth = game.getViewport().getWorldWidth();
+        
+        // Set up player positions spread across the bottom
+        Player[] players = getPlayers();
+        float spacing = worldWidth / (playerCount + 1);
+        
+        for (int i = 0; i < playerCount; i++) {
+            Player player = players[i];
+            player.setSpriteSize(playerSize);
+            
+            // Position players evenly spaced at the bottom
+            float startX = spacing * (i + 1) - playerSize / 2f;
+            player.getSprite().setPosition(startX, 1f);
+            
+            scores[i] = 0;
+            resetFallingStar(i);
+        }
     }
 
     @Override
     public void render(float delta) {
-
-        // --- INTRO SCREEN WITH INSTRUCTIONS ---
-        if (showingIntro) {
-            introTimer += delta;
-            drawIntroScreen();
-
-            if (introTimer >= INTRO_DURATION) {
-                showingIntro = false;
-                choosingCharacter = true; // first thing after intro is character select
+        if (!gameCompleted) {
+            gameTimer += delta;
+            
+            if (gameTimer >= GAME_DURATION) {
+                endGame();
+                return;
             }
-            return;
-        }
-
-        // --- CHARACTER SELECTION FOR CURRENT PLAYER ---
-        if (choosingCharacter) {
-            blinkTimer += delta;
-            handleCharacterSelectionInput();
-            drawCharacterSelectScreen();
-            return;
-        }
-
-        // --- TURN-END MESSAGE (“Player X got Y stars!”) ---
-        if (showingTurnEnd) {
-            turnEndTimer += delta;
-            draw();
-            if (turnEndTimer >= 1.5f) {
-                showingTurnEnd = false;
-                endTurn();
-            }
-            return;
-        }
-
-        // --- NORMAL GAMEPLAY ---
-        if (!gameOver) {
+            
             input();
             logic(delta);
-            draw();
         }
+        draw();
     }
 
-    @Override
-    public void resize(int width, int height) {
-        gameInstance.viewport.update(width, height, true);
-    }
-
-    @Override public void pause() { }
-    @Override public void resume() { }
-    @Override public void hide() { }
-
-    @Override
-    public void dispose() {
-        if (backgroundTex != null) backgroundTex.dispose();
-        if (fallingObjectTex != null) fallingObjectTex.dispose();
-        if (characterPreviewTextures != null) {
-            for (Texture t : characterPreviewTextures) {
-                if (t != null) t.dispose();
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // INTRO DRAW – now includes instructions
-    // -------------------------------------------------------------------------
-
-    private void drawIntroScreen() {
-        ScreenUtils.clear(0, 0, 0, 1);
-
-        gameInstance.viewport.apply();
-        gameInstance.batch.setProjectionMatrix(gameInstance.viewport.getCamera().combined);
-
-        float w = gameInstance.viewport.getWorldWidth();
-        float h = gameInstance.viewport.getWorldHeight();
-
-        gameInstance.batch.begin();
-
-        gameInstance.batch.draw(backgroundTex, 0, 0, w, h);
-
-        // Title
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Welcome to Catching Stars!",
-            w * 0.20f,
-            h * 0.80f
-        );
-
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "May the best player win!",
-            w * 0.23f,
-            h * 0.70f
-        );
-
-        // Controls
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Controls:",
-            w * 0.10f,
-            h * 0.55f
-        );
-
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Move Left: A or LEFT ARROW",
-            w * 0.10f,
-            h * 0.47f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Move Right: D or RIGHT ARROW",
-            w * 0.10f,
-            h * 0.40f
-        );
-
-        // Rules
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Catch falling stars to score points.",
-            w * 0.10f,
-            h * 0.30f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Missing ONE star ends your turn.",
-            w * 0.10f,
-            h * 0.23f
-        );
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "You can catch up to 10 stars in a turn.",
-            w * 0.10f,
-            h * 0.16f
-        );
-
-        gameInstance.batch.end();
-    }
-
-    // -------------------------------------------------------------------------
-    // CHARACTER SELECT
-    // -------------------------------------------------------------------------
-
-    private void handleCharacterSelectionInput() {
-        // Keyboard selection: keys 1–6
-        for (int i = 0; i < CHARACTER_TEXTURE_PATHS.length; i++) {
-            int keyCode = Input.Keys.NUM_1 + i; // 1,2,3,4,5,6
-
-            if (Gdx.input.isKeyJustPressed(keyCode)) {
-                chosenCharacterIndex[currentPlayerIndex] = i;
-
-                // Build player with chosen texture
-                players[currentPlayerIndex] = new Player(
-                    currentPlayerIndex + 1,
-                    new Texture(CHARACTER_TEXTURE_PATHS[i])
-                );
-                players[currentPlayerIndex].setSpriteSize(1f);
-                players[currentPlayerIndex].getSprite().setPosition(7f, 1f);
-
-                choosingCharacter = false;
-                resetFallingStar();
-                break;
-            }
-        }
-    }
-
-    private void drawCharacterSelectScreen() {
-        ScreenUtils.clear(0, 0, 0, 1);
-
-        gameInstance.viewport.apply();
-        gameInstance.batch.setProjectionMatrix(gameInstance.viewport.getCamera().combined);
-
-        float w = gameInstance.viewport.getWorldWidth();
-        float h = gameInstance.viewport.getWorldHeight();
-
-        gameInstance.batch.begin();
-
-        // background
-        gameInstance.batch.draw(backgroundTex, 0, 0, w, h);
-
-        // title
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Player " + (currentPlayerIndex + 1) + " - Select Your Character",
-            w * 0.10f,
-            h * 0.90f
-        );
-
-        // Blinking hint text
-        float alpha = 0.5f + 0.5f * MathUtils.sin(blinkTimer * 4f);
-        gameInstance.font.setColor(1f, 1f, 1f, alpha);
-        gameInstance.font.draw(
-            gameInstance.batch,
-            "Press the NUMBER KEY (1–6) for your character",
-            w * 0.10f,
-            h * 0.82f
-        );
-        // reset color to normal opaque white
-        gameInstance.font.setColor(1f, 1f, 1f, 1f);
-
-        // Draw character options in a row with numbered labels
-        float slotWidth = w / CHARACTER_TEXTURE_PATHS.length;
-        float spriteSize = 1.5f;
-
-        for (int i = 0; i < CHARACTER_TEXTURE_PATHS.length; i++) {
-            float centerX = slotWidth * i + slotWidth * 0.5f;
-            float spriteX = centerX - spriteSize * 0.5f;
-            float spriteY = h * 0.45f;
-
-            // character preview image
-            gameInstance.batch.draw(
-                characterPreviewTextures[i],
-                spriteX,
-                spriteY,
-                spriteSize,
-                spriteSize
-            );
-
-            // numeric label directly above sprite
-            gameInstance.font.draw(
-                gameInstance.batch,
-                (i + 1) + "",
-                centerX - 0.2f,
-                h * 0.60f
-            );
-
-            // text label under sprite
-            String label = CHARACTER_NAMES[i];
-            gameInstance.font.draw(
-                gameInstance.batch,
-                label,
-                centerX - 1.3f,
-                h * 0.35f
-            );
-        }
-
-        gameInstance.batch.end();
-    }
-
-    // -------------------------------------------------------------------------
-    // INPUT DURING GAMEPLAY – movement slowed down
-    // -------------------------------------------------------------------------
-
+    /**
+     * Handles input for all players simultaneously.
+     * Players can move freely across the entire screen.
+     */
     private void input() {
-        Player p = players[currentPlayerIndex];
-
-        // slower movement so it’s more controllable
-        float step = 0.12f;
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
-            p.getSprite().translateX(-step);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
-            p.getSprite().translateX(step);
-        }
-
-        float w = gameInstance.viewport.getWorldWidth();
-        float pw = p.getSprite().getWidth();
-        p.getSprite().setX(MathUtils.clamp(p.getSprite().getX(), 0f, w - pw));
-    }
-
-    // -------------------------------------------------------------------------
-    // GAME LOGIC
-    // -------------------------------------------------------------------------
-
-    private void logic(float delta) {
-        fallingY -= fallingSpeed * delta;
-
-        Player p = players[currentPlayerIndex];
-        float px = p.getSprite().getX();
-        float py = p.getSprite().getY();
-        float pw = p.getSprite().getWidth();
-        float ph = p.getSprite().getHeight();
-
-        boolean caughtHoriz = fallingX + 1f > px && fallingX < px + pw;
-        boolean caughtVert = fallingY <= py + ph && fallingY + 1f >= py;
-
-        if (caughtHoriz && caughtVert) {
-            scores[currentPlayerIndex]++;
-            resetFallingStar();
-
-            if (scores[currentPlayerIndex] >= 10) {
-                startTurnEnd();
+        float speed = 5f;
+        float delta = Gdx.graphics.getDeltaTime();
+        
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
+        
+        Player[] players = getPlayers();
+        for (Player player : players) {
+            if (player.isPressingLeft()) {
+                player.getSprite().translateX(-speed * delta);
             }
-            return;
-        }
-
-        if (fallingY < -1f) {
-            startTurnEnd();
+            if (player.isPressingRight()) {
+                player.getSprite().translateX(speed * delta);
+            }
+            if (player.isPressingUp()) {
+                player.getSprite().translateY(speed * delta);
+            }
+            if (player.isPressingDown()) {
+                player.getSprite().translateY(-speed * delta);
+            }
+            
+            // Clamp to screen boundaries
+            float x = player.getSprite().getX();
+            float y = player.getSprite().getY();
+            player.getSprite().setX(MathUtils.clamp(x, 0, worldWidth - playerSize));
+            player.getSprite().setY(MathUtils.clamp(y, 0, worldHeight - playerSize));
         }
     }
 
-    private void startTurnEnd() {
-        showingTurnEnd = true;
-        turnEndTimer = 0f;
+    /**
+     * Updates falling stars and checks for catches.
+     * Each player can only catch their own colored star.
+     */
+    private void logic(float delta) {
+        Player[] players = getPlayers();
+        
+        for (int i = 0; i < players.length; i++) {
+            // Move this player's star down
+            fallingY[i] -= fallingSpeed[i] * delta;
+            
+            Player player = players[i];
+            float px = player.getSprite().getX();
+            float py = player.getSprite().getY();
+            float pw = player.getSprite().getWidth();
+            float ph = player.getSprite().getHeight();
+            
+            // Check if THIS player catches THEIR star
+            boolean caughtHoriz = fallingX[i] + starSize > px && fallingX[i] < px + pw;
+            boolean caughtVert = fallingY[i] <= py + ph && fallingY[i] + starSize >= py;
+            
+            if (caughtHoriz && caughtVert) {
+                scores[i]++;
+                resetFallingStar(i);
+            } else if (fallingY[i] < -starSize) {
+                // Star missed, spawn a new one
+                resetFallingStar(i);
+            }
+        }
     }
 
-    // -------------------------------------------------------------------------
-    // DRAW DURING GAMEPLAY
-    // -------------------------------------------------------------------------
-
+    /**
+     * Draws the game state with color-coded stars.
+     */
     private void draw() {
         ScreenUtils.clear(0, 0, 0, 1);
 
-        gameInstance.viewport.apply();
-        gameInstance.batch.setProjectionMatrix(gameInstance.viewport.getCamera().combined);
+        game.getViewport().apply();
+        game.getBatch().setProjectionMatrix(game.getViewport().getCamera().combined);
 
-        float w = gameInstance.viewport.getWorldWidth();
-        float h = gameInstance.viewport.getWorldHeight();
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
 
-        gameInstance.batch.begin();
+        game.getBatch().begin();
 
-        gameInstance.batch.draw(backgroundTex, 0, 0, w, h);
-        gameInstance.batch.draw(fallingObjectTex, fallingX, fallingY, 1f, 1f);
-
-        players[currentPlayerIndex].getSprite().draw(gameInstance.batch);
-
-        if (!showingTurnEnd) {
-            gameInstance.font.draw(
-                gameInstance.batch,
-                "Player " + (currentPlayerIndex + 1) +
-                    " Score: " + scores[currentPlayerIndex],
-                1f,
-                h - 1f
-            );
-        } else {
-            gameInstance.font.draw(
-                gameInstance.batch,
-                "Player " + (currentPlayerIndex + 1) +
-                    " got " + scores[currentPlayerIndex] + " stars!",
-                w * 0.25f,
-                h * 0.55f
-            );
+        // Draw background
+        game.getBatch().draw(backgroundTex, 0, 0, worldWidth, worldHeight);
+        
+        Player[] players = getPlayers();
+        int playerCount = players.length;
+        
+        // Draw all falling stars with player colors and black outlines
+        float outlineSize = 0.15f; // Outline thickness
+        for (int i = 0; i < playerCount; i++) {
+            float x = fallingX[i];
+            float y = fallingY[i];
+            
+            // Draw black outline (slightly larger star behind)
+            game.getBatch().setColor(Color.BLACK);
+            game.getBatch().draw(fallingObjectTex, 
+                x - outlineSize, y - outlineSize, 
+                starSize + outlineSize * 2, starSize + outlineSize * 2);
+            
+            // Draw colored star on top
+            Color starColor = getPlayerColor(i);
+            game.getBatch().setColor(starColor);
+            game.getBatch().draw(fallingObjectTex, x, y, starSize, starSize);
         }
-
-        gameInstance.batch.end();
-    }
-
-    // -------------------------------------------------------------------------
-    // STAR RESET
-    // -------------------------------------------------------------------------
-
-    private void resetFallingStar() {
-        float w = gameInstance.viewport.getWorldWidth();
-        float h = gameInstance.viewport.getWorldHeight();
-
-        fallingX = MathUtils.random(0f, w - 1f);
-        fallingY = h + 1f;
-        fallingSpeed = MathUtils.random(3f, 6f);
-    }
-
-    // -------------------------------------------------------------------------
-    // TURN HANDLING
-    // -------------------------------------------------------------------------
-
-    private void endTurn() {
-        currentPlayerIndex++;
-
-        if (currentPlayerIndex >= playerCount) {
-            gameOver = true;
-            gameInstance.setScreen(new MiniGameResultScreen(gameInstance, makePlacementArray()));
-            return;
+        
+        // Reset color for player sprites
+        game.getBatch().setColor(Color.WHITE);
+        
+        // Draw all player sprites
+        for (Player player : players) {
+            player.getSprite().draw(game.getBatch());
         }
+        
+        // Scale font for 16x9 viewport (font is sized for 640x360 menu viewport)
+        game.getFont().getData().setScale(16f / 640f);
+        
+        // Draw color-coded score labels at the top
+        float labelSpacing = worldWidth / (playerCount + 1);
+        for (int i = 0; i < playerCount; i++) {
+            Color playerColor = getPlayerColor(i);
+            game.getFont().setColor(playerColor);
+            
+            String scoreText = "P" + (i + 1) + ": " + scores[i];
+            float labelX = labelSpacing * (i + 1) - 0.5f;
+            game.getFont().draw(game.getBatch(), scoreText, labelX, worldHeight - 0.3f);
+        }
+        
+        // Reset font color and draw timer
+        game.getFont().setColor(Color.WHITE);
+        int timeLeft = (int) Math.ceil(GAME_DURATION - gameTimer);
+        game.getFont().draw(
+            game.getBatch(),
+            "Time: " + timeLeft,
+            worldWidth / 2f - 0.5f,
+            worldHeight - 0.8f
+        );
 
-        // next player: go back to character select for them
-        choosingCharacter = true;
+        game.getBatch().end();
     }
 
-    // -------------------------------------------------------------------------
-    // WINNER SORTING (NO NULLS)
-    // -------------------------------------------------------------------------
+    /**
+     * Gets the color for a player based on their index.
+     */
+    private Color getPlayerColor(int playerIndex) {
+        if (playerIndex >= 0 && playerIndex < PLAYER_COLORS.length) {
+            return PLAYER_COLORS[playerIndex];
+        }
+        return Color.WHITE;
+    }
 
+    /**
+     * Resets a falling star to a random position at the top of the screen.
+     */
+    private void resetFallingStar(int playerIndex) {
+        float worldWidth = game.getViewport().getWorldWidth();
+        float worldHeight = game.getViewport().getWorldHeight();
+        
+        fallingX[playerIndex] = MathUtils.random(0f, worldWidth - starSize);
+        fallingY[playerIndex] = worldHeight + MathUtils.random(0f, 2f); // Stagger spawns
+        fallingSpeed[playerIndex] = MathUtils.random(3f, 6f);
+    }
+
+    /**
+     * Ends the game and determines placements based on scores.
+     */
+    private void endGame() {
+        gameCompleted = true;
+        onGameComplete(makePlacementArray());
+    }
+
+    /**
+     * Creates the placement array sorted by score (highest first).
+     */
     private Player[] makePlacementArray() {
+        int playerCount = getPlayerCount();
+        Player[] players = getPlayers();
         Player[] ordered = new Player[playerCount];
 
+        // Create index array for sorting
         Integer[] idx = new Integer[playerCount];
         for (int i = 0; i < playerCount; i++) {
             idx[i] = i;
         }
 
-        java.util.Arrays.sort(idx, new java.util.Comparator<Integer>() {
-            @Override
-            public int compare(Integer a, Integer b) {
-                return Integer.compare(scores[b], scores[a]);
-            }
-        });
+        // Sort by score descending
+        java.util.Arrays.sort(idx, (a, b) -> Integer.compare(scores[b], scores[a]));
 
         for (int i = 0; i < playerCount; i++) {
             ordered[i] = players[idx[i]];
         }
 
         return ordered;
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        game.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void dispose() {
+        if (backgroundTex != null) backgroundTex.dispose();
+        if (fallingObjectTex != null) fallingObjectTex.dispose();
     }
 }

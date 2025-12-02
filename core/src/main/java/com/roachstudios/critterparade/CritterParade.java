@@ -12,6 +12,7 @@ import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
 import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
+import com.roachstudios.critterparade.minigames.MemoryMatch;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
 
@@ -266,6 +267,7 @@ public class CritterParade extends Game {
 
         // register mini games
         registerMiniGame(SimpleRacerMiniGame.NAME, () -> new SimpleRacerMiniGame(this));
+        registerMiniGame(MemoryMatch.NAME, () -> new MemoryMatch(this));
 
         // Load settings and check for first run
         settings = new SettingsManager();
