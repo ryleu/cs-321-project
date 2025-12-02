@@ -63,11 +63,23 @@ public class BoardSelectMenu implements Screen {
                 public void changed(ChangeEvent event, Actor actor) {
                     gameInstance.log("Board selected: %s", namedBoard.name());
                     gameInstance.logBoardStart(namedBoard.name());
-                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, namedBoard.supplier()::get));
+                    gameInstance.setScreen(new PlayerSelectMenu(gameInstance, namedBoard.supplier()::get, 
+                        () -> new BoardSelectMenu(gameInstance)));
                 }
             });
             root.add(changeButton).pad(5);
         }
+
+        root.row();
+
+        TextButton backButton = new TextButton("Back", gameInstance.getSkin());
+        backButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new MainMenu(gameInstance));
+            }
+        });
+        root.add(backButton).pad(5);
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }

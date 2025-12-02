@@ -67,11 +67,23 @@ public class MiniGameSelectMenu implements Screen {
                 public void changed(ChangeEvent event, Actor actor) {
                     // Navigate to player select, then to instruction screen before the minigame
                     gameInstance.setScreen(new PlayerSelectMenu(gameInstance, 
-                        () -> new MiniGameInstructionScreen(gameInstance, miniGame)));
+                        () -> new MiniGameInstructionScreen(gameInstance, miniGame),
+                        () -> new MiniGameSelectMenu(gameInstance)));
                 }
             });
             root.add(changeButton).pad(5);
         }
+
+        root.row();
+
+        TextButton backButton = new TextButton("Back", gameInstance.getSkin());
+        backButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameInstance.setScreen(new MainMenu(gameInstance));
+            }
+        });
+        root.add(backButton).pad(5);
 
         root.setDebug(gameInstance.isDebugMode(), true);
     }

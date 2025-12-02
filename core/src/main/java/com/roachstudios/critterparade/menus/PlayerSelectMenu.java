@@ -23,6 +23,7 @@ public class PlayerSelectMenu implements Screen {
     private final CritterParade gameInstance;
     private final Stage stage;
     private final Supplier<Screen> nextScreen;
+    private final Supplier<Screen> backScreen;
 
     /**
      * Constructs the player selection menu screen.
@@ -31,8 +32,20 @@ public class PlayerSelectMenu implements Screen {
      * @param nextScreen supplier for the next screen to show after selecting players
      */
     public PlayerSelectMenu(CritterParade gameInstance, Supplier<Screen> nextScreen) {
+        this(gameInstance, nextScreen, null);
+    }
+
+    /**
+     * Constructs the player selection menu screen with a back button.
+     *
+     * @param gameInstance shared game instance used for navigation and skin
+     * @param nextScreen supplier for the next screen to show after selecting players
+     * @param backScreen supplier for the screen to return to when back is pressed, or null for no back button
+     */
+    public PlayerSelectMenu(CritterParade gameInstance, Supplier<Screen> nextScreen, Supplier<Screen> backScreen) {
         this.gameInstance = gameInstance;
         this.nextScreen = nextScreen;
+        this.backScreen = backScreen;
 
         // Fixed virtual size for consistent layout.
         stage = new Stage(new FitViewport(640, 360));
@@ -83,6 +96,18 @@ public class PlayerSelectMenu implements Screen {
                 }
             });
             root.add(changeButton).pad(5);
+        }
+
+        if (backScreen != null) {
+            root.row();
+            TextButton backButton = new TextButton("Back", gameInstance.getSkin());
+            backButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    gameInstance.setScreen(backScreen.get());
+                }
+            });
+            root.add(backButton).pad(5);
         }
 
         root.setDebug(gameInstance.isDebugMode(), true);

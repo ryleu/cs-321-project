@@ -104,7 +104,7 @@ public class MainMenu implements Screen {
                     gameInstance.setRushController(rushController);
                     // Return the instruction screen for the first minigame
                     return new MiniGameInstructionScreen(gameInstance, rushController.getCurrentMinigame());
-                }));
+                }, () -> new MainMenu(gameInstance)));
             }
         });
         root.add(rushMode).fill().align(Align.center);
