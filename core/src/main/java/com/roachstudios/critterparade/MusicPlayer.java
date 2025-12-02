@@ -111,10 +111,19 @@ public class MusicPlayer implements Disposable {
             return;
         }
         
+        Music newTrack = getTrackForTheme(theme);
+        
+        // Don't restart if the same underlying track is already playing
+        // (e.g., board falls back to intro music)
+        if (newTrack == currentTrack && currentTrack != null && currentTrack.isPlaying()) {
+            currentTheme = theme;
+            return;
+        }
+        
         stop();
         
         currentTheme = theme;
-        currentTrack = getTrackForTheme(theme);
+        currentTrack = newTrack;
         
         if (currentTrack != null) {
             currentTrack.play();
@@ -125,6 +134,7 @@ public class MusicPlayer implements Disposable {
     /**
      * Gets the appropriate Music track for the given theme.
      * For MINIGAME theme, randomly selects one of the available tracks.
+     * For BOARD theme, falls back to intro music if board music isn't available.
      * 
      * @param theme the theme to get a track for
      * @return the Music track, or null if not available
@@ -134,7 +144,8 @@ public class MusicPlayer implements Disposable {
             case INTRO:
                 return introMusic;
             case BOARD:
-                return boardMusic;
+                // Fall back to intro music if board music isn't available yet
+                return boardMusic != null ? boardMusic : introMusic;
             case MINIGAME:
                 return getRandomMinigameTrack();
             default:
