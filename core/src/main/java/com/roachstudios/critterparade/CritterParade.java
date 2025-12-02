@@ -13,6 +13,7 @@ import com.roachstudios.critterparade.menus.MainMenu;
 import com.roachstudios.critterparade.minigames.MiniGame;
 import com.roachstudios.critterparade.minigames.MiniGameDescriptor;
 import com.roachstudios.critterparade.minigames.SimpleRacerMiniGame;
+import com.roachstudios.critterparade.minigames.MemoryMatch;
 
 import com.roachstudios.critterparade.menus.ConsentScreen;
 import com.roachstudios.critterparade.menus.MiniGameRushController;
@@ -388,6 +389,8 @@ public class CritterParade extends Game {
             () -> new DodgeBallMiniGame(this));
         registerMiniGame(CatchObjectsMiniGame.NAME, CatchObjectsMiniGame.INSTRUCTIONS, 
             () -> new CatchObjectsMiniGame(this));
+        registerMiniGame(MemoryMatch.NAME, MemoryMatch.INSTRUCTIONS, 
+            () -> new MemoryMatch(this));
 
         // Initialize music player
         musicPlayer = new MusicPlayer(this);
