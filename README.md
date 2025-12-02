@@ -8,39 +8,29 @@ Most of our code is in `core/src/main/java/com/roachstudios/critterparade`. The 
 
 ### Simple Racer
 
-Game Instructions:
+Race to the finish line! Repeatedly tap your RIGHT input to move forward. First player to cross the finish line wins!
 
-For the Simple Racer Mini Game each player repeatidly presses a button to advance their Critter. The faster you press, the faster you win!
+### Dodgeball
 
-Player 1:
-- Character: Bee
-- Button: D
+Don't let the balls touch you! Use your DIRECTIONAL inputs to move around. Survive the longest to win!
 
-Player 2:
-- Character: Lady Bug
-- Button: H
+### Catching Stars
 
-Player 3:
-- Character: Frog
-- Button: L
-
-Player 4:
-- Character: Squirrel
-- Button: Enter
-
-Player 5:
-- Character: Mouse
-- Button: Right Arrow
-
-Player 6:
-- Character: Ant
-- Button: Num pad 6
+Catch YOUR colored stars to score! Use your DIRECTIONAL inputs to move. Only YOUR stars count - watch the colors!
 
 ## Boards
 
 ### Picnic Pond
 
-Picnic Pond is still under construction!
+A Mario Party-like experience set in a peaceful pond area. Players navigate around a picnic blanket near a pond, collecting crumbs and triggering minigames. The board features multiple interconnected paths and junctions for strategic movement.
+
+### Kitchen Havoc
+
+A Mario Party-like experience set in a bustling kitchen. Players navigate around countertops, appliances, and cooking stations. The board features an outer counter loop and an inner kitchen island, connected by cross paths for strategic movement options.
+
+### Ant Farmageddon
+
+A Mario Party-like experience set in underground ant tunnels. Players navigate through winding tunnels and chambers beneath the surface. The board features multiple branching paths and underground chambers connected by narrow tunnel passages.
 
 ## Platforms
 

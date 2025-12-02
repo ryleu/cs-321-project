@@ -1,11 +1,11 @@
 package com.roachstudios.critterparade;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.roachstudios.critterparade.gameboards.AntFarmageddonBoard;
 import com.roachstudios.critterparade.gameboards.GameBoard;
 import com.roachstudios.critterparade.gameboards.KitchenHavocBoard;
 import com.roachstudios.critterparade.gameboards.PicnicPondBoard;
@@ -379,6 +379,7 @@ public class CritterParade extends Game {
         // register game boards
         registerGameBoard(PicnicPondBoard.NAME, () -> new PicnicPondBoard(this));
         registerGameBoard(KitchenHavocBoard.NAME, () -> new KitchenHavocBoard(this));
+        registerGameBoard(AntFarmageddonBoard.NAME, () -> new AntFarmageddonBoard(this));
 
         // register mini games with their metadata
         registerMiniGame(SimpleRacerMiniGame.NAME, SimpleRacerMiniGame.INSTRUCTIONS, 

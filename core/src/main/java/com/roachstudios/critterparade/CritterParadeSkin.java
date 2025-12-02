@@ -77,7 +77,8 @@ public class CritterParadeSkin extends Skin {
     
     @Override
     public void dispose() {
-        font.dispose();
+        // Font is managed by Skin, so don't dispose it explicitly
+        // super.dispose() will handle all resources added to the Skin
         super.dispose();
     }
 }
